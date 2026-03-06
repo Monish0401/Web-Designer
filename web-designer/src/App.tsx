@@ -70,13 +70,13 @@ function App() {
     );
   };
 
-  // const addText = (id: string): void => {
-  //   const text = prompt("Enter text:");
-  //   if (!text) return;
-  //   setBlocks((prev) =>
-  //     prev.map((b) => (b.id === id ? { ...b, content: { type: "text", data: text } } : b))
-  //   );
-  // };
+  const addText = (id: string): void => {
+    const text = prompt("Enter text:");
+    if (!text) return;
+    setBlocks((prev) =>
+      prev.map((b) => (b.id === id ? { ...b, content: { type: "text", data: text } } : b))
+    );
+  };
 
   const addImage = (id: string, file: File): void => {
     const reader = new FileReader();
@@ -149,6 +149,120 @@ function App() {
   //   };
   // }, [selectedBlock]);
 
+//   const exportPageAsHtml = (): void => {
+//     const htmlDocument = `<!DOCTYPE html>
+// ${document.documentElement.outerHTML}`;
+//     const blob = new Blob([htmlDocument], { type: "text/html;charset=utf-8" });
+//     const url = URL.createObjectURL(blob);
+//     const link = document.createElement("a");
+//     link.href = url;
+//     link.download = "web-designer-export.html";
+//     link.click();
+//     URL.revokeObjectURL(url);
+//   };
+const exportPageAsHtml = (): void => {
+  if (blocks.length === 0) return;
+
+  // 1. Ask for a filename
+  const rawFileName = prompt("Enter a name for your file:", "my-design");
+  if (rawFileName === null) return; // Cancelled
+  const fileName = rawFileName.trim() || "my-design";
+
+  // 2. Calculate the "Offset" to remove the top/left gap
+  // We find the smallest X and Y among all blocks
+  const minX = Math.min(...blocks.map(b => b.x));
+  const minY = Math.min(...blocks.map(b => b.y));
+
+  // 3. Create a clean clone of the canvas
+  const canvasClone = containerRef.current!.cloneNode(true) as HTMLElement;
+
+  // 4. Remove UI elements from the clone
+  const selectorsToRemove = [
+    ".top-controls",
+    ".floating-toolbar",
+    ".empty-state",
+    ".tip-text",
+    ".count-badge",
+    "button",
+    ".empty-block-text",
+    ".react-resizable-handle" // Removes the resize dots/handles
+  ];
+  selectorsToRemove.forEach(s => canvasClone.querySelectorAll(s).forEach(el => el.remove()));
+
+  // 5. Adjust block positions in the clone to "Zero Out" the gap
+  // We subtract the minX and minY (plus a small 20px padding)
+  const exportedBlocks = canvasClone.querySelectorAll(".rnd-block");
+  exportedBlocks.forEach((el, index) => {
+    const htmlEl = el as HTMLElement;
+    const blockData = blocks[index];
+
+    // Reset position to remove the UI gap
+    htmlEl.style.left = `${blockData.x - minX + 20}px`;
+    htmlEl.style.top = `${blockData.y - minY + 20}px`;
+    
+    // Clean up visual state
+    htmlEl.style.border = "1px solid #d5d9e1";
+    htmlEl.style.boxShadow = "none";
+    htmlEl.style.transform = "none"; // react-rnd sometimes uses transforms
+  });
+
+  // 6. Build the Final HTML
+  const finalHtml = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>${fileName}</title>
+    <style>
+        body { 
+            margin: 0; 
+            padding: 0; 
+            background: #f6f8fc;
+            font-family: sans-serif;
+        }
+        .app-canvas { 
+            width: 100vw; 
+            height: 100vh; 
+            position: relative; 
+        }
+        .rnd-block { 
+            position: absolute !important; 
+            background: white; 
+            border-radius: 10px; 
+            overflow: hidden; 
+            display: flex; 
+            flex-direction: column; 
+        }
+        .block-content { 
+            flex: 1; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 8px; 
+        }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th, td { border: 1px solid #d5d9e1; padding: 6px; text-align: left; }
+        th { background: #f9fafb; }
+        img { max-width: 100%; height: auto; }
+    </style>
+</head>
+<body>
+    <div class="app-canvas">
+        ${canvasClone.innerHTML}
+    </div>
+</body>
+</html>`;
+
+  // 7. Download
+  const blob = new Blob([finalHtml], { type: "text/html;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${fileName}.html`;
+  link.click();
+  URL.revokeObjectURL(url);
+};
+
   return (
     <div
       ref={containerRef}
@@ -161,6 +275,7 @@ function App() {
       <div className="top-controls">
         <button onClick={createDefaultBlock} className="btn-primary">+ Add Block</button>
         <div className="top-menu-actions">
+          <button onClick={() => selectedBlock && addText(selectedBlock.id)} disabled={!selectedBlock}>Text</button>
           <button onClick={() => selectedBlock && addIcon(selectedBlock.id)} disabled={!selectedBlock}>Icon</button>
           <button onClick={() => selectedBlock && setShowModal(true)} disabled={!selectedBlock}>Table</button>
           <input
@@ -174,6 +289,7 @@ function App() {
           <button onClick={() => document.getElementById("file-upload")?.click()} disabled={!selectedBlock}>Img</button>
           <button onClick={() => selectedBlock && duplicateBlock(selectedBlock)} disabled={!selectedBlock}>Copy</button>
           <button onClick={() => selectedBlock && deleteBlock(selectedBlock.id)} className="danger" disabled={!selectedBlock}>Del</button>
+          <button onClick={exportPageAsHtml} className="export-btn">Export HTML</button>
         </div>
         <span className="tip-text">Tip: Drag on empty canvas to create a new block.</span>
         <span className="count-badge">{blocks.length} block{blocks.length === 1 ? "" : "s"}</span>
