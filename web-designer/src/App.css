@@ -15,7 +15,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.92);
   border: 1px solid #d9dfea;
   border-radius: 12px;
   padding: 10px 12px;
@@ -30,6 +30,30 @@
   padding: 8px 12px;
   cursor: pointer;
   font-weight: 600;
+}
+
+.top-menu-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 2px;
+}
+
+.top-menu-actions button {
+  border: 1px solid #d5d9e1;
+  background: #fff;
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.top-menu-actions button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.top-menu-actions .danger {
+  color: #b91c1c;
 }
 
 .tip-text {

@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { Rnd } from "react-rnd";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
@@ -70,13 +70,13 @@ function App() {
     );
   };
 
-  const addText = (id: string): void => {
-    const text = prompt("Enter text:");
-    if (!text) return;
-    setBlocks((prev) =>
-      prev.map((b) => (b.id === id ? { ...b, content: { type: "text", data: text } } : b))
-    );
-  };
+  // const addText = (id: string): void => {
+  //   const text = prompt("Enter text:");
+  //   if (!text) return;
+  //   setBlocks((prev) =>
+  //     prev.map((b) => (b.id === id ? { ...b, content: { type: "text", data: text } } : b))
+  //   );
+  // };
 
   const addImage = (id: string, file: File): void => {
     const reader = new FileReader();
@@ -141,13 +141,13 @@ function App() {
 
   const selectedBlock = blocks.find((b) => b.id === selectedId);
 
-  const toolbarPosition = useMemo(() => {
-    if (!selectedBlock) return null;
-    return {
-      top: Math.max(64, selectedBlock.y - 54),
-      left: Math.max(12, selectedBlock.x),
-    };
-  }, [selectedBlock]);
+  // const toolbarPosition = useMemo(() => {
+  //   if (!selectedBlock) return null;
+  //   return {
+  //     top: Math.max(64, selectedBlock.y - 54),
+  //     left: Math.max(12, selectedBlock.x),
+  //   };
+  // }, [selectedBlock]);
 
   return (
     <div
@@ -160,12 +160,27 @@ function App() {
       {/* Top Controls */}
       <div className="top-controls">
         <button onClick={createDefaultBlock} className="btn-primary">+ Add Block</button>
+        <div className="top-menu-actions">
+          <button onClick={() => selectedBlock && addIcon(selectedBlock.id)} disabled={!selectedBlock}>Icon</button>
+          <button onClick={() => selectedBlock && setShowModal(true)} disabled={!selectedBlock}>Table</button>
+          <input
+            type="file"
+            id="file-upload"
+            hidden
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              selectedBlock && e.target.files && addImage(selectedBlock.id, e.target.files[0])
+            }
+          />
+          <button onClick={() => document.getElementById("file-upload")?.click()} disabled={!selectedBlock}>Img</button>
+          <button onClick={() => selectedBlock && duplicateBlock(selectedBlock)} disabled={!selectedBlock}>Copy</button>
+          <button onClick={() => selectedBlock && deleteBlock(selectedBlock.id)} className="danger" disabled={!selectedBlock}>Del</button>
+        </div>
         <span className="tip-text">Tip: Drag on empty canvas to create a new block.</span>
         <span className="count-badge">{blocks.length} block{blocks.length === 1 ? "" : "s"}</span>
       </div>
 
       {/* Render Blocks */}
-      {blocks.length === 0 && !selectionPreview && (
+       {blocks.length === 0 && !selectionPreview && (
         <div className="empty-state">
           <h2>Start designing</h2>
           <p>Create a block from the button above or draw directly on the canvas.</p>
@@ -257,7 +272,7 @@ function App() {
       )}
 
       {/* Floating Toolbar for Selected Block */}
-      {selectedBlock && toolbarPosition && (
+      {/* {selectedBlock && toolbarPosition && (
         <div className="floating-toolbar" style={toolbarPosition}>
           <button onClick={() => addText(selectedBlock.id)}>Text</button>
           <button onClick={() => addIcon(selectedBlock.id)}>Icon</button>
@@ -275,7 +290,7 @@ function App() {
           <button onClick={() => duplicateBlock(selectedBlock)}>Copy</button>
           <button onClick={() => deleteBlock(selectedBlock.id)} className="danger">Del</button>
         </div>
-      )}
+      )} */}
 
       {/* Table Prompt Modal */}
       {showModal && (
