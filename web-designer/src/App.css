@@ -1,38 +1,104 @@
-.App {
-  text-align: center;
+.app-canvas {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(circle at 15% 10%, #eef3ff, #f6f8fc 45%, #f9fafc);
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.top-controls {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 10;
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #d9dfea;
+  border-radius: 12px;
+  padding: 10px 12px;
+  backdrop-filter: blur(4px);
+}
+
+.btn-primary {
+  border: none;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #fff;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.tip-text {
+  color: #5d677b;
+  font-size: 0.88rem;
+}
+
+.count-badge {
+  font-size: 0.82rem;
+  background: #eef2ff;
+  color: #334155;
+  border: 1px solid #c7d2fe;
+  border-radius: 999px;
+  padding: 4px 8px;
+}
+
+.empty-state {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: #6b7280;
+}
+
+.empty-state h2 {
+  margin: 0 0 6px;
+  color: #1f2937;
+}
+
+.block-content {
+  flex: 1;
+  overflow: auto;
+  padding: 8px;
+  display: flex;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
 }
 
-.App-link {
-  color: #61dafb;
+.empty-block-text {
+  color: #9ca3af;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.floating-toolbar {
+  position: absolute;
+  background-color: white;
+  border: 1px solid #d9dfea;
+  padding: 8px;
+  border-radius: 10px;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.12);
+  display: flex;
+  gap: 8px;
+  z-index: 100;
+}
+
+.floating-toolbar button {
+  border: 1px solid #d5d9e1;
+  background: #fff;
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.floating-toolbar .danger {
+  color: #b91c1c;
+}
+
+.divider {
+  width: 1px;
+  background: #ddd;
+  margin: 0 4px;
 }

@@ -1,7 +1,8 @@
-import React, { useState, useRef } from "react";
+import React, { useMemo, useState, useRef } from "react";
 import { Rnd } from "react-rnd";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
+import "./App.css";
 
 // --- Types ---
 interface Block {
@@ -43,8 +44,8 @@ function App() {
     const newBlock: Block = {
       id: uuidv4(),
       x: 100,
-      y: 100,
-      width: 200,
+      y: 120,
+      width: 220,
       height: 150,
     };
     setBlocks([...blocks, newBlock]);
@@ -95,7 +96,7 @@ function App() {
       );
       setShowModal(false);
       setPromptText("");
-    } catch (err) {
+    } catch (_err) {
       alert("Backend error generating table");
     }
   };
@@ -140,23 +141,36 @@ function App() {
 
   const selectedBlock = blocks.find((b) => b.id === selectedId);
 
+  const toolbarPosition = useMemo(() => {
+    if (!selectedBlock) return null;
+    return {
+      top: Math.max(64, selectedBlock.y - 54),
+      left: Math.max(12, selectedBlock.x),
+    };
+  }, [selectedBlock]);
+
   return (
     <div
       ref={containerRef}
-      style={{ width: "100vw", height: "100vh", background: "#f5f5f5", position: "relative", overflow: "hidden" }}
+      className="app-canvas"
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
     >
       {/* Top Controls */}
-      <div style={{ position: "absolute", top: 10, left: 10, zIndex: 10 }}>
-        <button onClick={createDefaultBlock} style={btnStyle}>+ Add Block Manually</button>
-        <span style={{ marginLeft: 10, fontSize: "14px", color: "#666" }}>
-          Tip: Click and drag on empty space to draw a block.
-        </span>
+      <div className="top-controls">
+        <button onClick={createDefaultBlock} className="btn-primary">+ Add Block</button>
+        <span className="tip-text">Tip: Drag on empty canvas to create a new block.</span>
+        <span className="count-badge">{blocks.length} block{blocks.length === 1 ? "" : "s"}</span>
       </div>
 
       {/* Render Blocks */}
+      {blocks.length === 0 && !selectionPreview && (
+        <div className="empty-state">
+          <h2>Start designing</h2>
+          <p>Create a block from the button above or draw directly on the canvas.</p>
+        </div>
+      )}
       {blocks.map((block) => (
         <Rnd
           key={block.id}
@@ -171,7 +185,7 @@ function App() {
             setBlocks((prev) =>
               prev.map((b) =>
                 b.id === block.id
-                  ? { ...b, width: parseInt(ref.style.width), height: parseInt(ref.style.height), ...pos }
+                 ? { ...b, width: parseInt(ref.style.width, 10), height: parseInt(ref.style.height, 10), ...pos }
                   : b
               )
             );
@@ -181,17 +195,18 @@ function App() {
             setSelectedId(block.id);
           }}
           style={{
-            border: selectedId === block.id ? "2px solid #3b82f6" : "1px solid #ccc",
+            border: selectedId === block.id ? "2px solid #2563eb" : "1px solid #d5d9e1",
+            borderRadius: "10px",
             background: "white",
             display: "flex",
             flexDirection: "column",
-            boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+            boxShadow: selectedId === block.id ? "0 12px 30px rgba(37, 99, 235, 0.18)" : "0 10px 24px rgba(0, 0, 0, 0.08)",
             zIndex: selectedId === block.id ? 5 : 1,
           }}
         >
           {/* Content Area */}
-          <div style={{ flex: 1, overflow: "auto", padding: "5px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            {!block.content && <span style={{ color: "#999" }}>Empty Block</span>}
+          <div className="block-content">
+            {!block.content && <span className="empty-block-text">Empty Block</span>}
             
             {block.content?.type === "text" && <span>{block.content.data}</span>}
             
@@ -202,16 +217,20 @@ function App() {
             )}
 
             {block.content?.type === "table" && (
-              <table border={1} style={{ width: "100%", borderCollapse: "collapse" }}>
+              <table border={1} style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
                 <thead>
                   <tr>
-                    {Object.keys(block.content.data[0] || {}).map((k) => <th key={k}>{k}</th>)}
+                    {Object.keys(block.content.data[0] || {}).map((k) => (
+                      <th key={k}>{k}</th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
                   {block.content.data.map((row: any, i: number) => (
                     <tr key={i}>
-                      {Object.values(row).map((val: any, j) => <td key={j}>{val}</td>)}
+                      {Object.values(row).map((val: any, j) => (
+                        <td key={j}>{String(val)}</td>
+                      ))}
                     </tr>
                   ))}
                 </tbody>
@@ -226,8 +245,8 @@ function App() {
         <div
           style={{
             position: "absolute",
-            border: "2px dashed #3b82f6",
-            backgroundColor: "rgba(59, 130, 246, 0.1)",
+            border: "2px dashed #2563eb",
+            backgroundColor: "rgba(37, 99, 235, 0.1)",
             left: selectionPreview.x,
             top: selectionPreview.y,
             width: selectionPreview.width,
@@ -238,21 +257,8 @@ function App() {
       )}
 
       {/* Floating Toolbar for Selected Block */}
-      {selectedBlock && (
-        <div
-          style={{
-            position: "absolute",
-            top: selectedBlock.y - 50,
-            left: selectedBlock.x,
-            backgroundColor: "white",
-            padding: "8px",
-            borderRadius: "4px",
-            boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
-            display: "flex",
-            gap: "8px",
-            zIndex: 100,
-          }}
-        >
+      {selectedBlock && toolbarPosition && (
+        <div className="floating-toolbar" style={toolbarPosition}>
           <button onClick={() => addText(selectedBlock.id)}>Text</button>
           <button onClick={() => addIcon(selectedBlock.id)}>Icon</button>
           <button onClick={() => setShowModal(true)}>Table</button>
@@ -265,9 +271,9 @@ function App() {
             }
           />
           <button onClick={() => document.getElementById("file-upload")?.click()}>Img</button>
-          <div style={{ width: "1px", background: "#ddd", margin: "0 4px" }} />
+          <div className="divider" />
           <button onClick={() => duplicateBlock(selectedBlock)}>Copy</button>
-          <button onClick={() => deleteBlock(selectedBlock.id)} style={{ color: "red" }}>Del</button>
+          <button onClick={() => deleteBlock(selectedBlock.id)} className="danger">Del</button>
         </div>
       )}
 
@@ -300,13 +306,13 @@ function App() {
 }
 
 // --- Styles ---
-const btnStyle: React.CSSProperties = {
-  padding: "8px 16px",
-  backgroundColor: "#fff",
-  border: "1px solid #ccc",
-  borderRadius: "4px",
-  cursor: "pointer",
-};
+// const btnStyle: React.CSSProperties = {
+//   padding: "8px 16px",
+//   backgroundColor: "#fff",
+//   border: "1px solid #ccc",
+//   borderRadius: "4px",
+//   cursor: "pointer",
+// };
 
 const modalOverlayStyle: React.CSSProperties = {
   position: "fixed",
