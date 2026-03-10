@@ -1,4 +1,4 @@
-name: React CI/CD
+name: React CI
 
 on:
   push:
@@ -7,11 +7,9 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
 
-    # Set the working directory to the 'web-designer' folder 
-    # where your package.json is located.
     defaults:
       run:
         working-directory: web-designer
@@ -25,8 +23,8 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          # Path to lock file for caching
-          cache-dependency-path: web-designer/package-lock.json
+          # Use a glob pattern to ensure the file is found regardless of root context
+          cache-dependency-path: '**/package-lock.json'
 
       - name: Install dependencies
         run: npm ci
@@ -37,7 +35,6 @@ jobs:
           CI: true
 
       - name: Run tests
-        # Runs the test script defined in your package.json
         run: npm test -- --watchAll=false
         env:
           CI: true
