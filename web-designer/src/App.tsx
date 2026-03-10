@@ -83,10 +83,17 @@ function App() {
   };
 
   const fetchTableData = async () => {
+    if(!selectedId){
+      alert ("No Block selected to recieve data.");
+      return;
+    }
+    const targetBlockId = selectedId;
     try {
       const res = await axios.post("http://localhost:8000/generate-table", selection);
-      setBlocks(prev => prev.map(b => b.id === selectedId ? { ...b, content: { type: "table", data: res.data } } : b));
+      setBlocks(prev => prev.map(b => b.id === targetBlockId ? { ...b, content: { type: "table", data: res.data } } : b));
       setShowModal(false);
+      setSelection({db:"", table:"",columns:[],rows:5});
+      setColumnList([]);
     } catch (err) {
       alert("Error generating table from MySQL");
     }
@@ -419,7 +426,7 @@ th { background-color: var(--table-header); color: var(--text-color); font-weigh
         <div className="top-menu-actions">
           <button onClick={() => selectedBlock && addText(selectedBlock.id)} disabled={!selectedBlock}>Text</button>
           <button onClick={() => selectedBlock && addIcon(selectedBlock.id)} disabled={!selectedBlock}>Icon</button>
-          <button onClick={() => selectedBlock && setShowModal(true)} disabled={!selectedBlock}>Table</button>
+          <button onClick={() => { if(selectedId){setSelectedId(selectedId);setShowModal(true);selectedBlock;} }} disabled={!selectedBlock}>Table</button>
           <input
             type="file"
             id="file-upload"
