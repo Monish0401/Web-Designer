@@ -98,6 +98,7 @@ function App() {
     }
   }, [showModal]);
 
+  // Fetch Tables when DB changes
   useEffect(() => {
     if (selection.db) {
       axios.get(`http://localhost:8000/tables?db=${selection.db}`)
@@ -106,6 +107,7 @@ function App() {
     }
   }, [selection.db]);
 
+  // Fetch Columns when Table changes
   useEffect(() => {
     if (selection.table) {
       axios.get(`http://localhost:8000/columns?db=${selection.db}&table=${selection.table}`)
@@ -137,6 +139,7 @@ function App() {
     }
   };
 
+  // --- Helper: Get relative coordinates for drawing ---
   const getRelativeCoordinates = (e: React.MouseEvent | MouseEvent) => {
     const rect = containerRef.current!.getBoundingClientRect();
     return { x: e.clientX - rect.left, y: e.clientY - rect.top };
@@ -188,8 +191,10 @@ function App() {
     reader.readAsDataURL(file);
   };
 
+  // --- Mouse Events for Click-and-Drag Creation ---
   // --- Drawing Events ---
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>): void => {
+     // Prevent drawing if we click an existing block or specific button/input
     const target = e.target as HTMLElement;
     if (target.closest(".rnd-block") || target.tagName === "BUTTON" || target.tagName === "INPUT" || target.tagName === "SELECT") return;
     const { x, y } = getRelativeCoordinates(e);
@@ -225,28 +230,48 @@ function App() {
   // --- Exports ---
   const exportPageAsHtml = (): void => {
     if (blocks.length === 0) return;
+    // 1. Ask for a filename
     const rawFileName = prompt("Enter a name for your file:", "my-design");
     if (rawFileName === null) return;
     const fileName = rawFileName.trim() || "my-design";
+    // 2. Calculate the "Offset" to remove the top/left gap
+    // We find the smallest X and Y among all blocks
     const minX = Math.min(...blocks.map(b => b.x));
     const minY = Math.min(...blocks.map(b => b.y));
 
+    // 3. Create a clean clone of the canvas
     const canvasClone = containerRef.current!.cloneNode(true) as HTMLElement;
-    const selectorsToRemove = [".top-controls", ".floating-toolbar", ".empty-state", ".tip-text", ".count-badge", "button", ".empty-block-text", ".react-resizable-handle"];
+    // 4. Remove UI elements from the clone
+    const selectorsToRemove = [
+      ".top-controls",
+      ".floating-toolbar",
+      ".empty-state",
+      ".tip-text",
+      ".count-badge",
+      "button",
+      ".empty-block-text",
+      ".react-resizable-handle" // Removes the resize dots/handles
+    ];
     selectorsToRemove.forEach(s => canvasClone.querySelectorAll(s).forEach(el => el.remove()));
 
+    // 5. Adjust block positions in the clone to "Zero Out" the gap
+    // We subtract the minX and minY (plus a small 20px padding)
     const exportedBlocks = canvasClone.querySelectorAll(".rnd-block");
     exportedBlocks.forEach((el, index) => {
       const htmlEl = el as HTMLElement;
       const blockData = blocks[index];
+      // Reset position to remove the UI gap
       htmlEl.style.left = `${blockData.x - minX + 20}px`;
       htmlEl.style.top = `${blockData.y - minY + 20}px`;
+      // Clean up visual state
       htmlEl.style.border = "1px solid #d5d9e1";
       htmlEl.style.boxShadow = "none";
-      htmlEl.style.transform = "none";
+      htmlEl.style.transform = "none"; // react-rnd sometimes uses transforms
     });
 
+    // 6. Build the Final HTML
     const finalHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{margin:0;padding:0;background:#f6f8fc;font-family:sans-serif}.app-canvas{width:100vw;height:100vh;position:relative}.rnd-block{position:absolute!important;background:white;border-radius:10px;overflow:hidden;display:flex;flex-direction:column}.block-content{flex:1;display:flex;align-items:center;justify-content:center;padding:8px}table{width:100%;border-collapse:collapse;font-size:.85rem}td,th{border:1px solid #d5d9e1;padding:6px;text-align:left}th{background:#f9fafb}img{max-width:100%;height:auto}</style></head><body><div class="app-canvas">${canvasClone.innerHTML}</div></body></html>`;
+    // 7. Download
     const blob = new Blob([finalHtml], { type: "text/html;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -296,6 +321,7 @@ function App() {
 
   return (
     <div ref={containerRef} className="app-canvas" onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp}>
+      {/* Top Controls */}
       <div className="top-controls">
         <div className="top-menu-actions">
           <button onClick={undo} disabled={past.length === 0} title="Undo (Ctrl+Z)">↩️</button>
@@ -315,6 +341,7 @@ function App() {
         <span className="count-badge">{blocks.length} blocks</span>
       </div>
 
+      {/* Render Blocks */}
       {blocks.length === 0 && !selectionPreview && (
         <div className="empty-state">
           <h2>Start designing</h2>
@@ -350,6 +377,7 @@ function App() {
             zIndex: selectedId === block.id ? 5 : 1,
           }}
         >
+          {/* Content Area */}
           <div className="block-content">
             {!block.content && <span className="empty-block-text">Empty</span>}
             {block.content?.type === "text" && <span>{block.content.data}</span>}
@@ -365,10 +393,12 @@ function App() {
         </Rnd>
       ))}
 
+      {/* Selection Preview (Drawing) */}
       {selectionPreview && (
         <div style={{ position: "absolute", border: "2px dashed #2563eb", backgroundColor: "rgba(37, 99, 235, 0.1)", left: selectionPreview.x, top: selectionPreview.y, width: selectionPreview.width, height: selectionPreview.height, pointerEvents: "none" }} />
       )}
 
+      {/* --- MySQL Table Selector Modal --- */}
       {showModal && (
         <div style={modalOverlayStyle}>
           <div style={modalContentStyle}>
@@ -402,6 +432,7 @@ function App() {
   );
 }
 
+// --- Styles for the Modal Content ---
 const modalOverlayStyle: React.CSSProperties = { position: "fixed", top: 0, left: 0, width: "100%", height: "100%", background: "rgba(0,0,0,0.6)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000 };
 const modalContentStyle: React.CSSProperties = { background: "white", padding: "24px", borderRadius: "12px", width: "350px", boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1)" };
 
