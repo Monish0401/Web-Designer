@@ -1,0 +1,648 @@
+import React, { useState, useRef, useMemo, useEffect } from "react";
+import { Rnd } from "react-rnd";
+import { v4 as uuidv4 } from "uuid";
+import axios from "axios";
+import "./App.css";
+import JSZip from "jszip";
+// import { saveAs } from "file-saver"; // Optional: npm install file-saver or use the link method below
+
+// --- Types ---
+interface Block {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  content?: {
+    type: "icon" | "text" | "image" | "table";
+    data: any;
+  };
+}
+
+function App() {
+  // State
+  const [blocks, setBlocks] = useState<Block[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState<boolean>(false);
+  const [promptText, setPromptText] = useState<string>("");
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+
+  // Selection/Drawing State
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isSelecting, setIsSelecting] = useState<boolean>(false);
+  const [startPoint, setStartPoint] = useState<{ x: number; y: number } | null>(null);
+  const [selectionPreview, setSelectionPreview] = useState<Block | null>(null);
+
+  // --- MySQL Dropdown State ---
+  const [dbList, setDbList] = useState<string[]>([]);
+  const [tableList, setTableList] = useState<string[]>([]);
+  const [columnList, setColumnList] = useState<string[]>([]);
+  
+  const [selection, setSelection] = useState({
+    db: "",
+    table: "",
+    columns: [] as string[],
+    rows: 5
+  });
+
+  // Fetch Databases when Modal Opens
+  useEffect(() => {
+    if (showModal) {
+      axios.get("http://localhost:8000/databases")
+        .then(res => setDbList(res.data))
+        .catch(() => alert("Error fetching databases"));
+    }
+  }, [showModal]);
+
+  // Fetch Tables when DB changes
+  useEffect(() => {
+    if (selection.db) {
+      axios.get(`http://localhost:8000/tables?db=${selection.db}`)
+        .then(res => setTableList(res.data))
+        .catch(() => alert("Error fetching tables"));
+    }
+  }, [selection.db]);
+
+  // Fetch Columns when Table changes
+  useEffect(() => {
+    if (selection.table) {
+      axios.get(`http://localhost:8000/columns?db=${selection.db}&table=${selection.table}`)
+        .then(res => setColumnList(res.data))
+        .catch(() => alert("Error fetching columns"));
+    }
+  }, [selection.table]);
+
+  // --- Handlers ---
+  const handleColumnToggle = (col: string) => {
+    setSelection(prev => ({
+      ...prev,
+      columns: prev.columns.includes(col) 
+        ? prev.columns.filter(c => c !== col) 
+        : [...prev.columns, col]
+    }));
+  };
+
+  const fetchTableData = async () => {
+    if(!selectedId){
+      alert ("No Block selected to recieve data.");
+      return;
+    }
+    const targetBlockId = selectedId;
+    try {
+      const res = await axios.post("http://localhost:8000/generate-table", selection);
+      setBlocks(prev => prev.map(b => b.id === targetBlockId ? { ...b, content: { type: "table", data: res.data } } : b));
+      setShowModal(false);
+      setSelection({db:"", table:"",columns:[],rows:5});
+      setColumnList([]);
+    } catch (err) {
+      alert("Error generating table from MySQL");
+    }
+  };
+
+  // --- Helper: Get relative coordinates for drawing ---
+  const getRelativeCoordinates = (e: React.MouseEvent | MouseEvent) => {
+    const rect = containerRef.current!.getBoundingClientRect();
+    return {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    };
+  };
+
+  // --- Block Actions ---
+  const createDefaultBlock = (): void => {
+    const newBlock: Block = {
+      id: uuidv4(),
+      x: 100,
+      y: 120,
+      width: 220,
+      height: 150,
+    };
+    setBlocks([...blocks, newBlock]);
+    setSelectedId(newBlock.id);
+  };
+
+  const deleteBlock = (id: string): void => {
+    setBlocks(blocks.filter((b) => b.id !== id));
+    setSelectedId(null);
+  };
+
+  const duplicateBlock = (block: Block): void => {
+    const newBlock: Block = { ...block, id: uuidv4(), x: block.x + 20, y: block.y + 20 };
+    setBlocks([...blocks, newBlock]);
+    setSelectedId(newBlock.id);
+  };
+
+  // --- Content Actions ---
+  const addIcon = (id: string): void => {
+    setBlocks((prev) =>
+      prev.map((b) => (b.id === id ? { ...b, content: { type: "icon", data: "⭐" } } : b))
+    );
+  };
+
+  const addText = (id: string): void => {
+    const text = prompt("Enter text:");
+    if (!text) return;
+    setBlocks((prev) =>
+      prev.map((b) => (b.id === id ? { ...b, content: { type: "text", data: text } } : b))
+    );
+  };
+
+  const addImage = (id: string, file: File): void => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      setBlocks((prev) =>
+        prev.map((b) => (b.id === id ? { ...b, content: { type: "image", data: reader.result } } : b))
+      );
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const sendTablePrompt = async (): Promise<void> => {
+    try {
+      const res = await axios.post("http://localhost:8000/generate-table", { prompt: promptText });
+      setBlocks((prev) =>
+        prev.map((b) => (b.id === selectedId ? { ...b, content: { type: "table", data: res.data } } : b))
+      );
+      setShowModal(false);
+      setPromptText("");
+    } catch (_err) {
+      alert("Backend error generating table");
+    }
+  };
+
+  // --- Mouse Events for Click-and-Drag Creation ---
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>): void => {
+    // Prevent drawing if we click an existing block or specific button/input
+    const target = e.target as HTMLElement;
+    if (target.closest(".rnd-block") || target.tagName === "BUTTON" || target.tagName === "INPUT") {
+      return;
+    }
+
+    const { x, y } = getRelativeCoordinates(e);
+    setIsSelecting(true);
+    setStartPoint({ x, y });
+    setSelectedId(null);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>): void => {
+    if (!isSelecting || !startPoint) return;
+    const { x, y } = getRelativeCoordinates(e);
+
+    setSelectionPreview({
+      id: "temp",
+      x: Math.min(startPoint.x, x),
+      y: Math.min(startPoint.y, y),
+      width: Math.abs(x - startPoint.x),
+      height: Math.abs(y - startPoint.y),
+    });
+  };
+
+  const handleMouseUp = (): void => {
+    if (selectionPreview && selectionPreview.width > 20 && selectionPreview.height > 20) {
+      const newBlock: Block = { ...selectionPreview, id: uuidv4() };
+      setBlocks([...blocks, newBlock]);
+      setSelectedId(newBlock.id);
+    }
+    setIsSelecting(false);
+    setStartPoint(null);
+    setSelectionPreview(null);
+  };
+
+  const selectedBlock = blocks.find((b) => b.id === selectedId);
+
+  // const toolbarPosition = useMemo(() => {
+  //   if (!selectedBlock) return null;
+  //   return {
+  //     top: Math.max(64, selectedBlock.y - 54),
+  //     left: Math.max(12, selectedBlock.x),
+  //   };
+  // }, [selectedBlock]);
+
+  //   const exportPageAsHtml = (): void => {
+  //     const htmlDocument = `<!DOCTYPE html>
+  // ${document.documentElement.outerHTML}`;
+  //     const blob = new Blob([htmlDocument], { type: "text/html;charset=utf-8" });
+  //     const url = URL.createObjectURL(blob);
+  //     const link = document.createElement("a");
+  //     link.href = url;
+  //     link.download = "web-designer-export.html";
+  //     link.click();
+  //     URL.revokeObjectURL(url);
+  //   };
+  const exportPageAsHtml = (): void => {
+    if (blocks.length === 0) return;
+
+    // 1. Ask for a filename
+    const rawFileName = prompt("Enter a name for your file:", "my-design");
+    if (rawFileName === null) return; // Cancelled
+    const fileName = rawFileName.trim() || "my-design";
+
+    // 2. Calculate the "Offset" to remove the top/left gap
+    // We find the smallest X and Y among all blocks
+    const minX = Math.min(...blocks.map(b => b.x));
+    const minY = Math.min(...blocks.map(b => b.y));
+
+    // 3. Create a clean clone of the canvas
+    const canvasClone = containerRef.current!.cloneNode(true) as HTMLElement;
+
+    // 4. Remove UI elements from the clone
+    const selectorsToRemove = [
+      ".top-controls",
+      ".floating-toolbar",
+      ".empty-state",
+      ".tip-text",
+      ".count-badge",
+      "button",
+      ".empty-block-text",
+      ".react-resizable-handle" // Removes the resize dots/handles
+    ];
+    selectorsToRemove.forEach(s => canvasClone.querySelectorAll(s).forEach(el => el.remove()));
+
+    // 5. Adjust block positions in the clone to "Zero Out" the gap
+    // We subtract the minX and minY (plus a small 20px padding)
+    const exportedBlocks = canvasClone.querySelectorAll(".rnd-block");
+    exportedBlocks.forEach((el, index) => {
+      const htmlEl = el as HTMLElement;
+      const blockData = blocks[index];
+
+      // Reset position to remove the UI gap
+      htmlEl.style.left = `${blockData.x - minX + 20}px`;
+      htmlEl.style.top = `${blockData.y - minY + 20}px`;
+
+      // Clean up visual state
+      htmlEl.style.border = "1px solid #d5d9e1";
+      htmlEl.style.boxShadow = "none";
+      htmlEl.style.transform = "none"; // react-rnd sometimes uses transforms
+    });
+
+    // 6. Build the Final HTML
+    const finalHtml = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>${fileName}</title>
+    <style>
+        body { 
+            margin: 0; 
+            padding: 0; 
+            background: #f6f8fc;
+            font-family: sans-serif;
+        }
+        .app-canvas { 
+            width: 100vw; 
+            height: 100vh; 
+            position: relative; 
+        }
+        .rnd-block { 
+            position: absolute !important; 
+            background: white; 
+            border-radius: 10px; 
+            overflow: hidden; 
+            display: flex; 
+            flex-direction: column; 
+        }
+        .block-content { 
+            flex: 1; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 8px; 
+        }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th, td { border: 1px solid #d5d9e1; padding: 6px; text-align: left; }
+        th { background: #f9fafb; }
+        img { max-width: 100%; height: auto; }
+    </style>
+</head>
+<body>
+    <div class="app-canvas">
+        ${canvasClone.innerHTML}
+    </div>
+</body>
+</html>`;
+
+    // 7. Download
+    const blob = new Blob([finalHtml], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${fileName}.html`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const exportPageAsZip = async (): Promise<void> => {
+  if (blocks.length === 0) return;
+
+  const rawFileName = prompt("Project Name:", "my-web-site");
+  if (rawFileName === null) return;
+  const projectName = rawFileName.trim() || "my-web-site";
+
+  const zip = new JSZip();
+  const imgFolder = zip.folder("images");
+  
+  const minX = Math.min(...blocks.map(b => b.x));
+  const minY = Math.min(...blocks.map(b => b.y));
+
+  const contentHtml = blocks.map(block => {
+    if (!block.content) return "";
+    const posStyle = `position: absolute; left: ${block.x - minX}px; top: ${block.y - minY}px; width: ${block.width}px; height: ${block.height}px;`;
+
+    switch (block.content.type) {
+      case "text": return `<div class="block-text" style="${posStyle}">${block.content.data}</div>`;
+      case "icon": return `<div class="block-icon" style="${posStyle}">${block.content.data}</div>`;
+      case "image":
+        const imgName = `img_${block.id.split('-')[0]}.png`;
+        imgFolder?.file(imgName, block.content.data.split(',')[1], { base64: true });
+        return `<img src="images/${imgName}" class="block-image" style="${posStyle}" alt="Content">`;
+      case "table":
+        const headers = Object.keys(block.content.data[0] || {});
+        return `
+          <div class="block-table-container" style="${posStyle}">
+            <table>
+              <thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
+              <tbody>${block.content.data.map((row: any) => `<tr>${Object.values(row).map(v => `<td>${v}</td>`).join('')}</tr>`).join('')}</tbody>
+            </table>
+          </div>`;
+      default: return "";
+    }
+  }).join('\n        ');
+
+  // DYNAMIC CSS GENERATION
+  const isDark = theme === "dark";
+  const cssContent = `
+:root {
+    --bg-color: ${isDark ? "#121212" : "#ffffff"};
+    --text-color: ${isDark ? "#e0e0e0" : "#333333"};
+    --card-bg: ${isDark ? "#1e1e1e" : "#ffffff"};
+    --border-color: ${isDark ? "#333333" : "#e5e7eb"};
+    --table-header: ${isDark ? "#2d2d2d" : "#f9fafb"};
+}
+
+body { 
+    margin: 0; 
+    padding: 40px; 
+    font-family: 'Inter', sans-serif; 
+    background-color: var(--bg-color); 
+    color: var(--text-color);
+    transition: background-color 0.3s ease;
+}
+
+.page-container { position: relative; width: 100%; height: 100vh; }
+.block-text, .block-icon { display: flex; align-items: center; justify-content: center; }
+.block-icon { font-size: 2.5rem; }
+.block-image { object-fit: contain; }
+.block-table-container { overflow: auto; border-radius: 8px; border: 1px solid var(--border-color); }
+
+table { width: 100%; border-collapse: collapse; background: var(--card-bg); }
+th, td { border: 1px solid var(--border-color); padding: 12px; text-align: left; }
+th { background-color: var(--table-header); color: var(--text-color); font-weight: 600; }
+  `.trim();
+
+  zip.file("index.html", `<!DOCTYPE html><html><head><link rel="stylesheet" href="styles.css"></head><body><div class="page-container">${contentHtml}</div></body></html>`);
+  zip.file("styles.css", cssContent);
+
+  const blob = await zip.generateAsync({ type: "blob" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${projectName}.zip`;
+  link.click();
+};
+
+
+  return (
+    <div
+      ref={containerRef}
+      className="app-canvas"
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+    >
+      {/* Top Controls */}
+      <div className="top-controls">
+        <button onClick={createDefaultBlock} className="btn-primary">+ Add Block</button>
+        <div className="top-menu-actions">
+          <button onClick={() => selectedBlock && addText(selectedBlock.id)} disabled={!selectedBlock}>Text</button>
+          <button onClick={() => selectedBlock && addIcon(selectedBlock.id)} disabled={!selectedBlock}>Icon</button>
+          <button onClick={() => { if(selectedId){setSelectedId(selectedId);setShowModal(true);selectedBlock;} }} disabled={!selectedBlock}>Table</button>
+          <input
+            type="file"
+            id="file-upload"
+            hidden
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              selectedBlock && e.target.files && addImage(selectedBlock.id, e.target.files[0])
+            }
+          />
+          <button onClick={() => document.getElementById("file-upload")?.click()} disabled={!selectedBlock}>Img</button>
+          <button onClick={() => selectedBlock && duplicateBlock(selectedBlock)} disabled={!selectedBlock}>Copy</button>
+          <button onClick={() => selectedBlock && deleteBlock(selectedBlock.id)} className="danger" disabled={!selectedBlock}>Del</button>
+          {/* <button onClick={() => setTheme(theme === "light" ? "dark" : "light")} className="theme-toggle">
+            {theme === "light" ? "🌙 Dark Mode" : "☀️ Light Mode"}
+          </button> */}
+          <button onClick={exportPageAsHtml} className="export-btn">Export HTML</button>
+          <button onClick={exportPageAsZip} className="export-btn">Export ZIP</button>
+        </div>
+        <span className="tip-text">Tip: Drag on empty canvas to create a new block.</span>
+        <span className="count-badge">{blocks.length} block{blocks.length === 1 ? "" : "s"}</span>
+      </div>
+
+      {/* Render Blocks */}
+      {blocks.length === 0 && !selectionPreview && (
+        <div className="empty-state">
+          <h2>Start designing</h2>
+          <p>Create a block from the button above or draw directly on the canvas.</p>
+        </div>
+      )}
+      {blocks.map((block) => (
+        <Rnd
+          key={block.id}
+          className="rnd-block"
+          size={{ width: block.width, height: block.height }}
+          position={{ x: block.x, y: block.y }}
+          bounds="parent"
+          onDragStop={(_e: any, d: { x: number; y: number }) => {
+            setBlocks((prev) => prev.map((b) => (b.id === block.id ? { ...b, x: d.x, y: d.y } : b)));
+          }}
+          onResizeStop={(_e: any, _dir: any, ref: HTMLElement, _delta: any, pos: { x: number; y: number }) => {
+            setBlocks((prev) =>
+              prev.map((b) =>
+                b.id === block.id
+                  ? { ...b, width: parseInt(ref.style.width, 10), height: parseInt(ref.style.height, 10), ...pos }
+                  : b
+              )
+            );
+          }}
+          onClick={(e: React.MouseEvent) => {
+            e.stopPropagation();
+            setSelectedId(block.id);
+          }}
+          style={{
+            border: selectedId === block.id ? "2px solid #2563eb" : "1px solid #d5d9e1",
+            borderRadius: "10px",
+            background: "white",
+            display: "flex",
+            flexDirection: "column",
+            boxShadow: selectedId === block.id ? "0 12px 30px rgba(37, 99, 235, 0.18)" : "0 10px 24px rgba(0, 0, 0, 0.08)",
+            zIndex: selectedId === block.id ? 5 : 1,
+          }}
+        >
+          {/* Content Area */}
+          <div className="block-content">
+            {!block.content && <span className="empty-block-text">Empty Block</span>}
+
+            {block.content?.type === "text" && <span>{block.content.data}</span>}
+
+            {block.content?.type === "icon" && <span style={{ fontSize: "2rem" }}>{block.content.data}</span>}
+
+            {block.content?.type === "image" && (
+              <img src={block.content.data} style={{ maxWidth: "100%", maxHeight: "100%" }} alt="content" />
+            )}
+
+            {block.content?.type === "table" && (
+              <table border={1} style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
+                <thead>
+                  <tr>
+                    {Object.keys(block.content.data[0] || {}).map((k) => (
+                      <th key={k}>{k}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {block.content.data.map((row: any, i: number) => (
+                    <tr key={i}>
+                      {Object.values(row).map((val: any, j) => (
+                        <td key={j}>{String(val)}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </Rnd>
+      ))}
+
+      {/* Selection Preview (Drawing) */}
+      {selectionPreview && (
+        <div
+          style={{
+            position: "absolute",
+            border: "2px dashed #2563eb",
+            backgroundColor: "rgba(37, 99, 235, 0.1)",
+            left: selectionPreview.x,
+            top: selectionPreview.y,
+            width: selectionPreview.width,
+            height: selectionPreview.height,
+            pointerEvents: "none",
+          }}
+        />
+      )}
+
+      {/* Floating Toolbar for Selected Block */}
+      {/* {selectedBlock && toolbarPosition && (
+        <div className="floating-toolbar" style={toolbarPosition}>
+          <button onClick={() => addText(selectedBlock.id)}>Text</button>
+          <button onClick={() => addIcon(selectedBlock.id)}>Icon</button>
+          <button onClick={() => setShowModal(true)}>Table</button>
+          <input
+            type="file"
+            id="file-upload"
+            hidden
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
+              e.target.files && addImage(selectedBlock.id, e.target.files[0])
+            }
+          />
+          <button onClick={() => document.getElementById("file-upload")?.click()}>Img</button>
+          <div className="divider" />
+          <button onClick={() => duplicateBlock(selectedBlock)}>Copy</button>
+          <button onClick={() => deleteBlock(selectedBlock.id)} className="danger">Del</button>
+        </div>
+      )} */}
+
+      {/* --- MySQL Table Selector Modal --- */}
+      {showModal && (
+        <div style={modalOverlayStyle}>
+          <div style={modalContentStyle}>
+            <h3>MySQL Data Selector</h3>
+            
+            <div className="dropdown-group">
+              <label>1. Select Database</label>
+              <select value={selection.db} onChange={e => setSelection({...selection, db: e.target.value, table: '', columns: []})}>
+                <option value="">-- Choose DB --</option>
+                {dbList.map(db => <option key={db} value={db}>{db}</option>)}
+              </select>
+
+              <label>2. Select Table</label>
+              <select value={selection.table} disabled={!selection.db} onChange={e => setSelection({...selection, table: e.target.value, columns: []})}>
+                <option value="">-- Choose Table --</option>
+                {tableList.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+
+              <label>3. Select Columns</label>
+              <div className="checkbox-dropdown">
+                {columnList.length === 0 && <small>Select a table first</small>}
+                {columnList.map(col => (
+                  <div key={col} className="checkbox-item">
+                    <input type="checkbox" checked={selection.columns.includes(col)} onChange={() => handleColumnToggle(col)} />
+                    <span>{col}</span>
+                  </div>
+                ))}
+              </div>
+
+              <label>4. Number of Rows</label>
+              <select value={selection.rows} onChange={e => setSelection({...selection, rows: parseInt(e.target.value)})}>
+                {[5, 10, 20, 50].map(num => <option key={num} value={num}>{num} rows</option>)}
+              </select>
+            </div>
+
+            <div className="modal-actions">
+              <button onClick={() => setShowModal(false)}>Cancel</button>
+              <button onClick={fetchTableData} className="btn-primary" disabled={selection.columns.length === 0}>
+                Fetch Data
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// --- Styles ---
+// const btnStyle: React.CSSProperties = {
+//   padding: "8px 16px",
+//   backgroundColor: "#fff",
+//   border: "1px solid #ccc",
+//   borderRadius: "4px",
+//   cursor: "pointer",
+// };
+
+// const modalOverlayStyle: React.CSSProperties = {
+//   position: "fixed",
+//   top: 0, left: 0, width: "100%", height: "100%",
+//   background: "rgba(0,0,0,0.5)",
+//   display: "flex", justifyContent: "center", alignItems: "center",
+//   zIndex: 1000,
+// };
+
+// const modalContentStyle: React.CSSProperties = {
+//   background: "white",
+//   padding: "24px",
+//   borderRadius: "8px",
+//   width: "400px",
+//   boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1)",
+// };
+
+// --- Styles for the Modal Content ---
+const modalOverlayStyle: React.CSSProperties = {
+  position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
+  background: "rgba(0,0,0,0.6)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000
+};
+
+const modalContentStyle: React.CSSProperties = {
+  background: "white", padding: "24px", borderRadius: "12px", width: "350px", boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1)"
+};
+
+export default App;

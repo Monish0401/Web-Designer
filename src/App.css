@@ -39,10 +39,7 @@
   padding-left: 2px;
 }
 
-.top-menu-actions button {
-  border: 1px solid #d5d9e1;
-  background: #fff;
-  border-radius: 6px;
+.top-menu-actions button {  
   padding: 4px 8px;
   cursor: pointer;
 }
