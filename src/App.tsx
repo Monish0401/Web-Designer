@@ -18,6 +18,8 @@ interface Block {
   };
 }
 
+const GRID_SIZE = 20;
+
 function App() {
   // --- Core State ---
   const [blocks, setBlocks] = useState<Block[]>([]);
@@ -29,12 +31,14 @@ function App() {
 
   // --- UI & Selection State ---
   const [showModal, setShowModal] = useState<boolean>(false);
-  const [promptText, setPromptText] = useState<string>("");
-  const [theme] = useState<"light" | "dark">("light");
   const containerRef = useRef<HTMLDivElement>(null);
   const [isSelecting, setIsSelecting] = useState<boolean>(false);
   const [startPoint, setStartPoint] = useState<{ x: number; y: number } | null>(null);
   const [selectionPreview, setSelectionPreview] = useState<Block | null>(null);
+  const [isMoving, setIsMoving] = useState(false);
+
+  // --- Snap Logic Engine ---
+  const snap = (value: number) => Math.round(value / GRID_SIZE) * GRID_SIZE;
 
   // --- MySQL State ---
   const [dbList, setDbList] = useState<string[]>([]);
@@ -75,19 +79,39 @@ function App() {
     setBlocks(next);
   };
 
-  // --- Keyboard Shortcuts ---
+  // --- Keyboard Shortcuts (Updated) ---
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      const isInput = e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement;
+      if (isInput) return; // Don't trigger shortcuts if user is typing in a prompt/input
+
+      // Undo / Redo
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
-        if (e.shiftKey) redo();
-        else undo();
+        e.preventDefault();
+        e.shiftKey ? redo() : undo();
       } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") {
+        e.preventDefault();
         redo();
       }
+
+      // Duplicate (Ctrl + D)
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "d") {
+        e.preventDefault(); // Stop browser from opening "Add Bookmark"
+        const selected = blocks.find(b => b.id === selectedId);
+        if (selected) duplicateBlock(selected);
+      }
+
+      // Delete (Delete or Backspace)
+      if (e.key === "Delete" || e.key === "Backspace") {
+        if (selectedId) {
+          deleteBlock(selectedId);
+        }
+      }
     };
+
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [blocks, past, future]);
+  }, [blocks, past, future, selectedId]); // selectedId added to dependencies
 
   // --- MySQL Fetching ---
   useEffect(() => {
@@ -193,39 +217,73 @@ function App() {
 
   // --- Mouse Events for Click-and-Drag Creation ---
   // --- Drawing Events ---
-  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>): void => {
-     // Prevent drawing if we click an existing block or specific button/input
+  const handleMouseDown = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
     if (target.closest(".rnd-block") || target.tagName === "BUTTON" || target.tagName === "INPUT" || target.tagName === "SELECT") return;
-    const { x, y } = getRelativeCoordinates(e);
+    const rect = containerRef.current!.getBoundingClientRect();
     setIsSelecting(true);
-    setStartPoint({ x, y });
+    // Initial point is snapped
+    setStartPoint({
+      x: snap(e.clientX - rect.left),
+      y: snap(e.clientY - rect.top)
+    });
     setSelectedId(null);
   };
+  // const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>): void => {
+  //    // Prevent drawing if we click an existing block or specific button/input
+  //   const target = e.target as HTMLElement;
+  //   if (target.closest(".rnd-block") || target.tagName === "BUTTON" || target.tagName === "INPUT" || target.tagName === "SELECT") return;
+  //   const { x, y } = getRelativeCoordinates(e);
+  //   setIsSelecting(true);
+  //   setStartPoint({ x, y });
+  //   setSelectedId(null);
+  // };
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>): void => {
+  const handleMouseMove = (e: React.MouseEvent) => {
     if (!isSelecting || !startPoint) return;
-    const { x, y } = getRelativeCoordinates(e);
+    const rect = containerRef.current!.getBoundingClientRect();
+    const curX = snap(e.clientX - rect.left);
+    const curY = snap(e.clientY - rect.top);
     setSelectionPreview({
       id: "temp",
-      x: Math.min(startPoint.x, x),
-      y: Math.min(startPoint.y, y),
-      width: Math.abs(x - startPoint.x),
-      height: Math.abs(y - startPoint.y),
+      x: Math.min(startPoint.x, curX),
+      y: Math.min(startPoint.y, curY),
+      width: Math.max(GRID_SIZE, Math.abs(curX - startPoint.x)),
+      height: Math.max(GRID_SIZE, Math.abs(curY - startPoint.y)),
     });
   };
 
-  const handleMouseUp = (): void => {
-    if (selectionPreview && selectionPreview.width > 20 && selectionPreview.height > 20) {
+  // const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>): void => {
+  //   if (!isSelecting || !startPoint) return;
+  //   const { x, y } = getRelativeCoordinates(e);
+  //   setSelectionPreview({
+  //     id: "temp",
+  //     x: Math.min(startPoint.x, x),
+  //     y: Math.min(startPoint.y, y),
+  //     width: Math.abs(x - startPoint.x),
+  //     height: Math.abs(y - startPoint.y),
+  //   });
+  // };
+
+  const handleMouseUp = () => {
+    if (selectionPreview) {
       recordChange();
-      const newBlock: Block = { ...selectionPreview, id: uuidv4() };
-      setBlocks([...blocks, newBlock]);
-      setSelectedId(newBlock.id);
+      setBlocks([...blocks, { ...selectionPreview, id: uuidv4() }]);
     }
     setIsSelecting(false);
-    setStartPoint(null);
     setSelectionPreview(null);
   };
+  // const handleMouseUp = (): void => {
+  //   if (selectionPreview && selectionPreview.width > 20 && selectionPreview.height > 20) {
+  //     recordChange();
+  //     const newBlock: Block = { ...selectionPreview, id: uuidv4() };
+  //     setBlocks([...blocks, newBlock]);
+  //     setSelectedId(newBlock.id);
+  //   }
+  //   setIsSelecting(false);
+  //   setStartPoint(null);
+  //   setSelectionPreview(null);
+  // };
 
   // --- Exports ---
   const exportPageAsHtml = (): void => {
@@ -320,23 +378,41 @@ function App() {
   const selectedBlock = blocks.find((b) => b.id === selectedId);
 
   return (
-    <div ref={containerRef} className="app-canvas" onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp}>
+    <div
+      ref={containerRef} /*className="app-canvas"*/
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      style={{
+        width: "100vw", height: "100vh", position: "relative", overflow: "hidden",
+        background: "#f0f2f5",
+        // The dynamic grid background
+        backgroundImage: isMoving || isSelecting
+          ? `radial-gradient(#d1d5db 1px, transparent 0)`
+          : "none",
+        backgroundSize: `${GRID_SIZE}px ${GRID_SIZE}px`
+      }}
+    >
       {/* Top Controls */}
       <div className="top-controls">
         <div className="top-menu-actions">
           <button onClick={undo} disabled={past.length === 0} title="Undo (Ctrl+Z)">↩️</button>
           <button onClick={redo} disabled={future.length === 0} title="Redo (Ctrl+Y)">↪️</button>
           <div style={{ width: 1, background: '#ddd', margin: '0 10px' }} />
+          <div style={dividerStyle} />
           <button onClick={createDefaultBlock} className="btn-primary">+ Block</button>
+          <span style={{ marginLeft: "auto", fontSize: "12px", color: "#666" }}>
+            Grid: {GRID_SIZE}px | {isMoving ? "Snapping Active" : "Precision Mode"}
+          </span>
           <button onClick={() => selectedBlock && addText(selectedBlock.id)} disabled={!selectedBlock}>Text</button>
           <button onClick={() => selectedBlock && addIcon(selectedBlock.id)} disabled={!selectedBlock}>Icon</button>
           <button onClick={() => { if (selectedId) setShowModal(true) }} disabled={!selectedBlock}>Table</button>
           <input type="file" id="file-upload" hidden onChange={(e) => selectedBlock && e.target.files && addImage(selectedBlock.id, e.target.files[0])} />
-          <button onClick={() => document.getElementById("file-upload")?.click()} disabled={!selectedBlock}>Img</button>
-          <button onClick={() => selectedBlock && duplicateBlock(selectedBlock)} disabled={!selectedBlock}>Copy</button>
-          <button onClick={() => selectedBlock && deleteBlock(selectedBlock.id)} className="danger" disabled={!selectedBlock}>Del</button>
-          <button onClick={exportPageAsHtml} className="export-btn">HTML</button>
-          <button onClick={exportPageAsZip} className="export-btn">ZIP</button>
+          <button onClick={() => document.getElementById("file-upload")?.click()} disabled={!selectedBlock}>Image</button>
+          <button onClick={() => selectedBlock && duplicateBlock(selectedBlock)} disabled={!selectedBlock} title="Duplicate (Ctrl+D)">Duplicate</button>
+          <button onClick={() => selectedBlock && deleteBlock(selectedBlock.id)} className="danger" disabled={!selectedBlock} title="Delete (Delete or Backspace)">Delete</button>
+          <button onClick={exportPageAsHtml} className="export-btn">Export HTML</button>
+          <button onClick={exportPageAsZip} className="export-btn">Export ZIP</button>
         </div>
         <span className="count-badge">{blocks.length} blocks</span>
       </div>
@@ -356,15 +432,22 @@ function App() {
           size={{ width: block.width, height: block.height }}
           position={{ x: block.x, y: block.y }}
           bounds="parent"
+          // Figma-style Snapping: 
+          dragGrid={[GRID_SIZE, GRID_SIZE]}
+          resizeGrid={[GRID_SIZE, GRID_SIZE]}
+          onDragStart={() => setIsMoving(true)}
           onDragStop={(_e, d) => {
+            setIsMoving(false);
             if (d.x !== block.x || d.y !== block.y) {
               recordChange();
               setBlocks((prev) => prev.map((b) => (b.id === block.id ? { ...b, x: d.x, y: d.y } : b)));
             }
           }}
+          onResizeStart={() => setIsMoving(true)}
           onResizeStop={(_e, _dir, ref, _delta, pos) => {
+            setIsMoving(false);
             recordChange();
-            setBlocks((prev) => prev.map((b) => b.id === block.id ? { ...b, width: parseInt(ref.style.width, 10), height: parseInt(ref.style.height, 10), ...pos } : b));
+            setBlocks((prev) => prev.map((b) => b.id === block.id ? { ...b, width: snap(parseInt(ref.style.width)), height: snap(parseInt(ref.style.height)), ...pos } : b));
           }}
           onClick={(e: React.MouseEvent) => {
             e.stopPropagation();
@@ -372,14 +455,21 @@ function App() {
           }}
           style={{
             border: selectedId === block.id ? "2px solid #2563eb" : "1px solid #d5d9e1",
-            borderRadius: "10px", background: "white", display: "flex", flexDirection: "column",
-            boxShadow: selectedId === block.id ? "0 12px 30px rgba(37, 99, 235, 0.18)" : "0 10px 24px rgba(0, 0, 0, 0.08)",
-            zIndex: selectedId === block.id ? 5 : 1,
+            borderRadius: "10px", background: "white", display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: selectedId === block.id ? "0 4px 15px rgba(37, 99, 235, 0.2)" : "none",
+            zIndex: selectedId === block.id ? 10 : 1,
           }}
         >
+
+
           {/* Content Area */}
           <div className="block-content">
-            {!block.content && <span className="empty-block-text">Empty</span>}
+
+            {!block.content &&
+              <span className="empty-block-text">          
+                Empty Block <br />                          
+                x:{block.x}, y:{block.y}                                
+              </span>}
             {block.content?.type === "text" && <span>{block.content.data}</span>}
             {block.content?.type === "icon" && <span style={{ fontSize: "2rem" }}>{block.content.data}</span>}
             {block.content?.type === "image" && <img src={block.content.data} style={{ maxWidth: "100%", maxHeight: "100%" }} alt="content" />}
@@ -391,11 +481,57 @@ function App() {
             )}
           </div>
         </Rnd>
+        // <Rnd
+        //   key={block.id}
+        //   className="rnd-block"
+        //   size={{ width: block.width, height: block.height }}
+        //   position={{ x: block.x, y: block.y }}
+        //   bounds="parent"
+        //   onDragStop={(_e, d) => {
+        //     if (d.x !== block.x || d.y !== block.y) {
+        //       recordChange();
+        //       setBlocks((prev) => prev.map((b) => (b.id === block.id ? { ...b, x: d.x, y: d.y } : b)));
+        //     }
+        //   }}
+        //   onResizeStop={(_e, _dir, ref, _delta, pos) => {
+        //     recordChange();
+        //     setBlocks((prev) => prev.map((b) => b.id === block.id ? { ...b, width: parseInt(ref.style.width, 10), height: parseInt(ref.style.height, 10), ...pos } : b));
+        //   }}
+        //   onClick={(e: React.MouseEvent) => {
+        //     e.stopPropagation();
+        //     setSelectedId(block.id);
+        //   }}
+        //   style={{
+        //     border: selectedId === block.id ? "2px solid #2563eb" : "1px solid #d5d9e1",
+        //     borderRadius: "10px", background: "white", display: "flex", flexDirection: "column",
+        //     boxShadow: selectedId === block.id ? "0 12px 30px rgba(37, 99, 235, 0.18)" : "0 10px 24px rgba(0, 0, 0, 0.08)",
+        //     zIndex: selectedId === block.id ? 5 : 1,
+        //   }}
+        // >
+        //   {/* Content Area */}
+        //   <div className="block-content">
+        //     {!block.content && <span className="empty-block-text">Empty</span>}
+        //     {block.content?.type === "text" && <span>{block.content.data}</span>}
+        //     {block.content?.type === "icon" && <span style={{ fontSize: "2rem" }}>{block.content.data}</span>}
+        //     {block.content?.type === "image" && <img src={block.content.data} style={{ maxWidth: "100%", maxHeight: "100%" }} alt="content" />}
+        //     {block.content?.type === "table" && (
+        //       <table border={1} style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
+        //         <thead><tr>{Object.keys(block.content.data[0] || {}).map((k) => <th key={k}>{k}</th>)}</tr></thead>
+        //         <tbody>{block.content.data.map((row: any, i: number) => <tr key={i}>{Object.values(row).map((val: any, j) => <td key={j}>{String(val)}</td>)}</tr>)}</tbody>
+        //       </table>
+        //     )}
+        //   </div>
+        // </Rnd>
       ))}
 
-      {/* Selection Preview (Drawing) */}
+      {/* Selection Preview (Drawing) with Snap-to-Grid Visual */}
       {selectionPreview && (
-        <div style={{ position: "absolute", border: "2px dashed #2563eb", backgroundColor: "rgba(37, 99, 235, 0.1)", left: selectionPreview.x, top: selectionPreview.y, width: selectionPreview.width, height: selectionPreview.height, pointerEvents: "none" }} />
+        <div style={{
+          position: "absolute", border: "2px dashed #2563eb", backgroundColor: "rgba(37, 99, 235, 0.1)",
+          left: selectionPreview.x, top: selectionPreview.y,
+          width: selectionPreview.width, height: selectionPreview.height,
+          pointerEvents: "none"
+        }} />
       )}
 
       {/* --- MySQL Table Selector Modal --- */}
@@ -435,5 +571,6 @@ function App() {
 // --- Styles for the Modal Content ---
 const modalOverlayStyle: React.CSSProperties = { position: "fixed", top: 0, left: 0, width: "100%", height: "100%", background: "rgba(0,0,0,0.6)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000 };
 const modalContentStyle: React.CSSProperties = { background: "white", padding: "24px", borderRadius: "12px", width: "350px", boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1)" };
+const dividerStyle: React.CSSProperties = { width: 1, height: 20, background: "#eee", margin: "0 5px" };
 
 export default App;

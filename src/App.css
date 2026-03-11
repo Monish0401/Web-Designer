@@ -3,7 +3,8 @@
   height: 100vh;
   position: relative;
   overflow: hidden;
-  background: radial-gradient(circle at 15% 10%, #eef3ff, #f6f8fc 45%, #f9fafc);
+  background: #f0f2f5;
+  /* background: radial-gradient(circle at 15% 10%, #eef3ff, #f6f8fc 45%, #f9fafc); */
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
 }
 
