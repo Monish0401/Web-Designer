@@ -513,9 +513,9 @@ function App() {
           position={{ x: block.x, y: block.y }}
           bounds="parent"
           // Figma-style Snapping: 
-          // dragGrid={[GRID_SIZE, GRID_SIZE]}
+          dragGrid={[GRID_SIZE, GRID_SIZE]}
           //  {/*---Changes---*/}
-          dragGrid={(e, d) => {
+          onDrag={(e, d) => {
             const { x, y } = handleSnapping(block.id, d.x, d.y, block.width, block - height);
             setBlocks(prev => prev.map(b =>
               b.id === block.id ? { ...b, x, y } : b
