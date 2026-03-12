@@ -17,6 +17,13 @@ interface Block {
     data: any;
   };
 }
+ {/*---Changes---*/}
+
+interface Guide {
+  type: 'vertical' | 'horizontal';
+  pos: number;
+}
+ {/*---Changes---*/}
 
 const GRID_SIZE = 20;
 
@@ -39,6 +46,10 @@ function App() {
 
   // --- Snap Logic Engine ---
   const snap = (value: number) => Math.round(value / GRID_SIZE) * GRID_SIZE;
+   {/*---Changes---*/}
+  const SNAP_THRESHOLD = 8; // Pixels proximity to trigger alignment
+  const [activeGuides, setActiveGuides] = useState<Guide[]>([]);
+   {/*---Changes---*/}
 
   // --- MySQL State ---
   const [dbList, setDbList] = useState<string[]>([]);
@@ -149,6 +160,75 @@ function App() {
         : [...prev.columns, col]
     }));
   };
+
+   {/*---Changes---*/}
+
+  const handleSnapping = (id: string, rawX: number, rawY: number, width: number, height: number) => {
+    // 1. Default: Snap to Grid
+    let newX = Math.round(rawX / GRID_SIZE) * GRID_SIZE;
+    let newY = Math.round(rawY / GRID_SIZE) * GRID_SIZE;
+
+    const guides: Guide[] = [];
+
+    // 2. Alignment Snapping (Overwrites Grid Snap if close to another block)
+    blocks.forEach((other) => {
+      if (other.id === id) return;
+
+      // Vertical Snap Points (X-axis)
+      const otherLeft = other.x;
+      const otherCenter = other.x + other.width / 2;
+      const otherRight = other.x + other.width;
+
+      const dragLeft = rawX;
+      const dragCenter = rawX + width / 2;
+      const dragRight = rawX + width;
+
+      // Check all combinations (Left-to-Left, Center-to-Center, etc.)
+      const vSnapPoints = [
+        { drag: dragLeft, other: otherLeft, result: otherLeft },
+        { drag: dragLeft, other: otherRight, result: otherRight },
+        { drag: dragCenter, other: otherCenter, result: otherCenter - width / 2 },
+        { drag: dragRight, other: otherLeft, result: otherLeft - width },
+        { drag: dragRight, other: otherRight, result: otherRight - width },
+      ];
+
+      vSnapPoints.forEach(point => {
+        if (Math.abs(point.drag - point.other) < SNAP_THRESHOLD) {
+          newX = point.result;
+          guides.push({ type: 'vertical', pos: point.other });
+        }
+      });
+
+      // Horizontal Snap Points (Y-axis)
+      const otherTop = other.y;
+      const otherVCenter = other.y + other.height / 2;
+      const otherBottom = other.y + other.height;
+
+      const dragTop = rawY;
+      const dragVCenter = rawY + height / 2;
+      const dragBottom = rawY + height;
+
+      const hSnapPoints = [
+        { drag: dragTop, other: otherTop, result: otherTop },
+        { drag: dragTop, other: otherBottom, result: otherBottom },
+        { drag: dragVCenter, other: otherVCenter, result: otherVCenter - height / 2 },
+        { drag: dragBottom, other: otherTop, result: otherTop - height },
+        { drag: dragBottom, other: otherBottom, result: otherBottom - height },
+      ];
+
+      hSnapPoints.forEach(point => {
+        if (Math.abs(point.drag - point.other) < SNAP_THRESHOLD) {
+          newY = point.result;
+          guides.push({ type: 'horizontal', pos: point.other });
+        }
+      });
+    });
+
+    setActiveGuides(guides);
+    return { x: newX, y: newY };
+  };
+
+   {/*---Changes---*/}
 
   const fetchTableData = async () => {
     if (!selectedId) return;
@@ -433,12 +513,23 @@ function App() {
           position={{ x: block.x, y: block.y }}
           bounds="parent"
           // Figma-style Snapping: 
-          dragGrid={[GRID_SIZE, GRID_SIZE]}
+          // dragGrid={[GRID_SIZE, GRID_SIZE]}
+           {/*---Changes---*/}
+          dragGrid={(e, d) => {
+            const { x, y } = handleSnapping(block.id, d.x, d.y, block.width, block - height);
+            setBlocks(prev => prev.map(b =>
+              b.id === block.id ? { ...b, x, y } : b
+            ));
+          }}
+           {/*---Changes---*/}
           resizeGrid={[GRID_SIZE, GRID_SIZE]}
           onDragStart={() => setIsMoving(true)}
           onDragStop={(_e, d) => {
             setIsMoving(false);
             if (d.x !== block.x || d.y !== block.y) {
+               {/*---Changes---*/}
+              setActiveGuides([]);
+               {/*---Changes---*/}
               recordChange();
               setBlocks((prev) => prev.map((b) => (b.id === block.id ? { ...b, x: d.x, y: d.y } : b)));
             }
@@ -466,9 +557,9 @@ function App() {
           <div className="block-content">
 
             {!block.content &&
-              <span className="empty-block-text">          
-                Empty Block <br />                          
-                x:{block.x}, y:{block.y}                                
+              <span className="empty-block-text">
+                Empty Block <br />
+                x:{block.x}, y:{block.y}
               </span>}
             {block.content?.type === "text" && <span>{block.content.data}</span>}
             {block.content?.type === "icon" && <span style={{ fontSize: "2rem" }}>{block.content.data}</span>}
@@ -533,7 +624,24 @@ function App() {
           pointerEvents: "none"
         }} />
       )}
-
+      {/*---Changes---*/}
+      {/* Alignment Guide Lines */}
+      {activeGuides.map((guide, index) => (
+        <div
+          key={index}
+          style={{
+            position: 'absolute',
+            backgroundColor: '#ff00ff', // Magenta/Pink figma style
+            zIndex: 100,
+            pointerEvents: 'none',
+            ...(guide.type === 'vertical'
+              ? { left: guide.pos, top: 0, bottom: 0, width: '1.5px' }
+              : { top: guide.pos, left: 0, right: 0, height: '1.5px' }
+            )
+          }}
+        />
+      ))}
+ {/*---Changes---*/}
       {/* --- MySQL Table Selector Modal --- */}
       {showModal && (
         <div style={modalOverlayStyle}>
