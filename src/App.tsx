@@ -516,7 +516,7 @@ function App() {
           dragGrid={[GRID_SIZE, GRID_SIZE]}
           //  {/*---Changes---*/}
           onDrag={(e, d) => {
-            const { x, y } = handleSnapping(block.id, d.x, d.y, block.width, block - height);
+            const { x, y } = handleSnapping(block.id, d.x, d.y, block.width, block.height);
             setBlocks(prev => prev.map(b =>
               b.id === block.id ? { ...b, x, y } : b
             ));
