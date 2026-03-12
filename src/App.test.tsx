@@ -1,3 +1,7 @@
+jest.mock('uuid', () => ({
+  v4: () => 'test-uuid-1234',
+}));
+
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import App from './App';
