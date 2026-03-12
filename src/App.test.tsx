@@ -6,8 +6,14 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import App from './App';
 
-test('renders learn react link', () => {
+test('renders start designing heading', () => {
   render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+  const headingElement = screen.getByText(/start designing/i);
+  expect(headingElement).toBeInTheDocument();
+});
+
+test('renders export button', () => {
+  render(<App />);
+  const buttonElement = screen.getByText(/export html/i);
+  expect(buttonElement).toBeInTheDocument();
 });
