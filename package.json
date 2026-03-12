@@ -35,6 +35,11 @@
       "react-app/jest"
     ]
   },
+  "jest": {
+  "transformIgnorePatterns": [
+    "node_modules/(?!(axios|uuid)/)"
+  ]
+},
   "browserslist": {
     "production": [
       ">0.2%",
@@ -47,9 +52,4 @@
       "last 1 safari version"
     ]
   }
-},
-"jest": {
-  "transformIgnorePatterns": [
-    "node_modules/(?!(axios|uuid)/)"
-  ]
 }
