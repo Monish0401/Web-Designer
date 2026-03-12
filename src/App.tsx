@@ -514,22 +514,22 @@ function App() {
           bounds="parent"
           // Figma-style Snapping: 
           // dragGrid={[GRID_SIZE, GRID_SIZE]}
-           {/*---Changes---*/}
+          //  {/*---Changes---*/}
           dragGrid={(e, d) => {
             const { x, y } = handleSnapping(block.id, d.x, d.y, block.width, block - height);
             setBlocks(prev => prev.map(b =>
               b.id === block.id ? { ...b, x, y } : b
             ));
           }}
-           {/*---Changes---*/}
+          //  {/*---Changes---*/}
           resizeGrid={[GRID_SIZE, GRID_SIZE]}
           onDragStart={() => setIsMoving(true)}
           onDragStop={(_e, d) => {
             setIsMoving(false);
             if (d.x !== block.x || d.y !== block.y) {
-               {/*---Changes---*/}
+              //  {/*---Changes---*/}
               setActiveGuides([]);
-               {/*---Changes---*/}
+              //  {/*---Changes---*/}
               recordChange();
               setBlocks((prev) => prev.map((b) => (b.id === block.id ? { ...b, x: d.x, y: d.y } : b)));
             }
@@ -624,7 +624,7 @@ function App() {
           pointerEvents: "none"
         }} />
       )}
-      {/*---Changes---*/}
+      {/* ---Changes--- */}
       {/* Alignment Guide Lines */}
       {activeGuides.map((guide, index) => (
         <div
