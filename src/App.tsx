@@ -632,7 +632,7 @@ function App() {
           key={index}
           style={{
             position: 'absolute',
-            backgroundColor: '#ff00ff', // Magenta/Pink figma style
+            backgroundColor: '#ff0000', // Magenta/Pink figma style
             zIndex: 100,
             pointerEvents: 'none',
             ...(guide.type === 'vertical'
