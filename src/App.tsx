@@ -17,13 +17,13 @@ interface Block {
     data: any;
   };
 }
- {/*---Changes---*/}
+//  {/*---Changes---*/}
 
 interface Guide {
   type: 'vertical' | 'horizontal';
   pos: number;
 }
- {/*---Changes---*/}
+//  {/*---Changes---*/}
 
 const GRID_SIZE = 20;
 
@@ -46,10 +46,10 @@ function App() {
 
   // --- Snap Logic Engine ---
   const snap = (value: number) => Math.round(value / GRID_SIZE) * GRID_SIZE;
-   {/*---Changes---*/}
+  //  {/*---Changes---*/}
   const SNAP_THRESHOLD = 8; // Pixels proximity to trigger alignment
   const [activeGuides, setActiveGuides] = useState<Guide[]>([]);
-   {/*---Changes---*/}
+  //  {/*---Changes---*/}
 
   // --- MySQL State ---
   const [dbList, setDbList] = useState<string[]>([]);
@@ -161,7 +161,7 @@ function App() {
     }));
   };
 
-   {/*---Changes---*/}
+  //  {/*---Changes---*/}
 
   const handleSnapping = (id: string, rawX: number, rawY: number, width: number, height: number) => {
     // 1. Default: Snap to Grid
@@ -228,7 +228,7 @@ function App() {
     return { x: newX, y: newY };
   };
 
-   {/*---Changes---*/}
+  //  {/*---Changes---*/}
 
   const fetchTableData = async () => {
     if (!selectedId) return;
