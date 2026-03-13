@@ -366,94 +366,256 @@ function App() {
   // };
 
   // --- Exports ---
+  // const exportPageAsHtml = (): void => {
+  //   if (blocks.length === 0) return;
+  //   // 1. Ask for a filename
+  //   const rawFileName = prompt("Enter a name for your file:", "my-design");
+  //   if (rawFileName === null) return;
+  //   const fileName = rawFileName.trim() || "my-design";
+  //   // 2. Calculate the "Offset" to remove the top/left gap
+  //   // We find the smallest X and Y among all blocks
+  //   const minX = Math.min(...blocks.map(b => b.x));
+  //   const minY = Math.min(...blocks.map(b => b.y));
+
+  //   // 3. Create a clean clone of the canvas
+  //   const canvasClone = containerRef.current!.cloneNode(true) as HTMLElement;
+  //   // 4. Remove UI elements from the clone
+  //   const selectorsToRemove = [
+  //     ".top-controls",
+  //     ".floating-toolbar",
+  //     ".empty-state",
+  //     ".tip-text",
+  //     ".count-badge",
+  //     "button",
+  //     ".empty-block-text",
+  //     ".react-resizable-handle" // Removes the resize dots/handles
+  //   ];
+  //   selectorsToRemove.forEach(s => canvasClone.querySelectorAll(s).forEach(el => el.remove()));
+
+  //   // 5. Adjust block positions in the clone to "Zero Out" the gap
+  //   // We subtract the minX and minY (plus a small 20px padding)
+  //   const exportedBlocks = canvasClone.querySelectorAll(".rnd-block");
+  //   exportedBlocks.forEach((el, index) => {
+  //     const htmlEl = el as HTMLElement;
+  //     const blockData = blocks[index];
+  //     // Reset position to remove the UI gap
+  //     htmlEl.style.left = `${blockData.x - minX + 20}px`;
+  //     htmlEl.style.top = `${blockData.y - minY + 20}px`;
+  //     // Clean up visual state
+  //     htmlEl.style.border = "1px solid #d5d9e1";
+  //     htmlEl.style.boxShadow = "none";
+  //     htmlEl.style.transform = "none"; // react-rnd sometimes uses transforms
+  //   });
+
+  //   // 6. Build the Final HTML
+  //   const finalHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{margin:0;padding:0;background:#f6f8fc;font-family:sans-serif}.app-canvas{width:100vw;height:100vh;position:relative}.rnd-block{position:absolute!important;background:white;border-radius:10px;overflow:hidden;display:flex;flex-direction:column}.block-content{flex:1;display:flex;align-items:center;justify-content:center;padding:8px}table{width:100%;border-collapse:collapse;font-size:.85rem}td,th{border:1px solid #d5d9e1;padding:6px;text-align:left}th{background:#f9fafb}img{max-width:100%;height:auto}</style></head><body><div class="app-canvas">${canvasClone.innerHTML}</div></body></html>`;
+  //   // 7. Download
+  //   const blob = new Blob([finalHtml], { type: "text/html;charset=utf-8" });
+  //   const url = URL.createObjectURL(blob);
+  //   const link = document.createElement("a");
+  //   link.href = url;
+  //   link.download = `${fileName}.html`;
+  //   link.click();
+  // };
+
   const exportPageAsHtml = (): void => {
-    if (blocks.length === 0) return;
-    // 1. Ask for a filename
-    const rawFileName = prompt("Enter a name for your file:", "my-design");
-    if (rawFileName === null) return;
-    const fileName = rawFileName.trim() || "my-design";
-    // 2. Calculate the "Offset" to remove the top/left gap
-    // We find the smallest X and Y among all blocks
-    const minX = Math.min(...blocks.map(b => b.x));
-    const minY = Math.min(...blocks.map(b => b.y));
+  if (blocks.length === 0) return;
 
-    // 3. Create a clean clone of the canvas
-    const canvasClone = containerRef.current!.cloneNode(true) as HTMLElement;
-    // 4. Remove UI elements from the clone
-    const selectorsToRemove = [
-      ".top-controls",
-      ".floating-toolbar",
-      ".empty-state",
-      ".tip-text",
-      ".count-badge",
-      "button",
-      ".empty-block-text",
-      ".react-resizable-handle" // Removes the resize dots/handles
-    ];
-    selectorsToRemove.forEach(s => canvasClone.querySelectorAll(s).forEach(el => el.remove()));
+  const rawFileName = prompt("Enter a name for your file:", "my-design");
+  if (rawFileName === null) return;
+  const fileName = rawFileName.trim() || "my-design";
 
-    // 5. Adjust block positions in the clone to "Zero Out" the gap
-    // We subtract the minX and minY (plus a small 20px padding)
-    const exportedBlocks = canvasClone.querySelectorAll(".rnd-block");
-    exportedBlocks.forEach((el, index) => {
-      const htmlEl = el as HTMLElement;
-      const blockData = blocks[index];
-      // Reset position to remove the UI gap
-      htmlEl.style.left = `${blockData.x - minX + 20}px`;
-      htmlEl.style.top = `${blockData.y - minY + 20}px`;
-      // Clean up visual state
-      htmlEl.style.border = "1px solid #d5d9e1";
-      htmlEl.style.boxShadow = "none";
-      htmlEl.style.transform = "none"; // react-rnd sometimes uses transforms
-    });
+  // 1. Calculate the bounding box to remove empty space
+  const minX = Math.min(...blocks.map(b => b.x));
+  const minY = Math.min(...blocks.map(b => b.y));
 
-    // 6. Build the Final HTML
-    const finalHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{margin:0;padding:0;background:#f6f8fc;font-family:sans-serif}.app-canvas{width:100vw;height:100vh;position:relative}.rnd-block{position:absolute!important;background:white;border-radius:10px;overflow:hidden;display:flex;flex-direction:column}.block-content{flex:1;display:flex;align-items:center;justify-content:center;padding:8px}table{width:100%;border-collapse:collapse;font-size:.85rem}td,th{border:1px solid #d5d9e1;padding:6px;text-align:left}th{background:#f9fafb}img{max-width:100%;height:auto}</style></head><body><div class="app-canvas">${canvasClone.innerHTML}</div></body></html>`;
-    // 7. Download
-    const blob = new Blob([finalHtml], { type: "text/html;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${fileName}.html`;
-    link.click();
-  };
+  // 2. Generate clean HTML for each block based on state
+  const contentHtml = blocks.map(block => {
+    if (!block.content) return "";
+    
+    // Position styles adjusted by offsets (with 20px padding)
+    const style = `position: absolute; left: ${block.x - minX + 20}px; top: ${block.y - minY + 20}px; width: ${block.width}px; height: ${block.height}px;`;
+    
+    let innerContent = "";
+    switch (block.content.type) {
+      case "text":
+        innerContent = `<div class="block-text">${block.content.data}</div>`;
+        break;
+      case "icon":
+        innerContent = `<div class="block-icon">${block.content.data}</div>`;
+        break;
+      case "image":
+        innerContent = `<img src="${block.content.data}" class="block-image">`;
+        break;
+      case "table":
+        const headers = Object.keys(block.content.data[0] || {});
+        innerContent = `
+          <div class="block-table-container">
+            <table>
+              <thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
+              <tbody>
+                ${block.content.data.map((row: any) => `
+                  <tr>${Object.values(row).map(v => `<td>${v}</td>`).join('')}</tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>`;
+        break;
+      default:
+        innerContent = "";
+    }
+
+    return `<div class="rnd-block" style="${style}">${innerContent}</div>`;
+  }).join('\n');
+
+  // 3. Build the full document structure
+  const finalHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>${fileName}</title>
+  <style>
+    body { margin: 0; padding: 20px; background: #f6f8fc; font-family: sans-serif; }
+    .app-canvas { width: 100%; min-height: 100vh; position: relative; }
+    .rnd-block { background: white; border-radius: 10px; border: 1px solid #d5d9e1; overflow: hidden; display: flex; flex-direction: column; }
+    .block-text, .block-icon { flex: 1; display: flex; align-items: center; justify-content: center; padding: 8px; text-align: center; }
+    .block-icon { font-size: 2.5rem; }
+    .block-image { width: 100%; height: 100%; object-fit: contain; }
+    .block-table-container { padding: 8px; overflow: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    td, th { border: 1px solid #d5d9e1; padding: 6px; text-align: left; }
+    th { background: #f9fafb; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="app-canvas">${contentHtml}</div>
+</body>
+</html>`;
+
+  const blob = new Blob([finalHtml], { type: "text/html;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${fileName}.html`;
+  link.click();
+};
+
+  // const exportPageAsZip = async () => {
+  //   if (blocks.length === 0) return;
+  //   const rawFileName = prompt("Project Name:", "my-web-site");
+  //   if (rawFileName === null) return;
+  //   const projectName = rawFileName.trim() || "my-web-site";
+  //   const zip = new JSZip();
+  //   const imgFolder = zip.folder("images");
+  //   const minX = Math.min(...blocks.map(b => b.x));
+  //   const minY = Math.min(...blocks.map(b => b.y));
+
+  //   const contentHtml = blocks.map(block => {
+  //     if (!block.content) return "";
+  //     const posStyle = `position: absolute; left: ${block.x - minX}px; top: ${block.y - minY}px; width: ${block.width}px; height: ${block.height}px;`;
+  //     switch (block.content.type) {
+  //       case "text": return `<div class="block-text" style="${posStyle}">${block.content.data}</div>`;
+  //       case "icon": return `<div class="block-icon" style="${posStyle}">${block.content.data}</div>`;
+  //       case "image":
+  //         const imgName = `img_${block.id.split('-')[0]}.png`;
+  //         imgFolder?.file(imgName, block.content.data.split(',')[1], { base64: true });
+  //         return `<img src="images/${imgName}" class="block-image" style="${posStyle}">`;
+  //       case "table":
+  //         const headers = Object.keys(block.content.data[0] || {});
+  //         return `<div class="block-table-container" style="${posStyle}"><table><thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${block.content.data.map((row: any) => `<tr>${Object.values(row).map(v => `<td>${v}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+  //       default: return "";
+  //     }
+  //   }).join('\n');
+
+  //   zip.file("index.html", `<!DOCTYPE html><html><head><link rel="stylesheet" href="styles.css"></head><body><div class="page-container">${contentHtml}</div></body></html>`);
+  //   zip.file("styles.css", `body{margin:0;padding:40px;font-family:sans-serif;background:#fff}.page-container{position:relative;width:100%;height:100vh}.block-text,.block-icon{display:flex;align-items:center;justify-content:center}.block-icon{font-size:2.5rem}.block-image{object-fit:contain}.block-table-container{overflow:auto;border-radius:8px;border:1px solid #eee}table{width:100%;border-collapse:collapse}td,th{border:1px solid #eee;padding:12px;text-align:left}th{background:#f9fafb}`);
+  //   const blob = await zip.generateAsync({ type: "blob" });
+  //   const url = URL.createObjectURL(blob);
+  //   const link = document.createElement("a");
+  //   link.href = url;
+  //   link.download = `${projectName}.zip`;
+  //   link.click();
+  // };
 
   const exportPageAsZip = async () => {
-    if (blocks.length === 0) return;
-    const rawFileName = prompt("Project Name:", "my-web-site");
-    if (rawFileName === null) return;
-    const projectName = rawFileName.trim() || "my-web-site";
-    const zip = new JSZip();
-    const imgFolder = zip.folder("images");
-    const minX = Math.min(...blocks.map(b => b.x));
-    const minY = Math.min(...blocks.map(b => b.y));
+  if (blocks.length === 0) return;
 
-    const contentHtml = blocks.map(block => {
-      if (!block.content) return "";
-      const posStyle = `position: absolute; left: ${block.x - minX}px; top: ${block.y - minY}px; width: ${block.width}px; height: ${block.height}px;`;
-      switch (block.content.type) {
-        case "text": return `<div class="block-text" style="${posStyle}">${block.content.data}</div>`;
-        case "icon": return `<div class="block-icon" style="${posStyle}">${block.content.data}</div>`;
-        case "image":
-          const imgName = `img_${block.id.split('-')[0]}.png`;
-          imgFolder?.file(imgName, block.content.data.split(',')[1], { base64: true });
-          return `<img src="images/${imgName}" class="block-image" style="${posStyle}">`;
-        case "table":
-          const headers = Object.keys(block.content.data[0] || {});
-          return `<div class="block-table-container" style="${posStyle}"><table><thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${block.content.data.map((row: any) => `<tr>${Object.values(row).map(v => `<td>${v}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
-        default: return "";
-      }
-    }).join('\n');
+  const rawFileName = prompt("Project Name:", "my-web-site");
+  if (rawFileName === null) return;
+  const projectName = rawFileName.trim() || "my-web-site";
 
-    zip.file("index.html", `<!DOCTYPE html><html><head><link rel="stylesheet" href="styles.css"></head><body><div class="page-container">${contentHtml}</div></body></html>`);
-    zip.file("styles.css", `body{margin:0;padding:40px;font-family:sans-serif;background:#fff}.page-container{position:relative;width:100%;height:100vh}.block-text,.block-icon{display:flex;align-items:center;justify-content:center}.block-icon{font-size:2.5rem}.block-image{object-fit:contain}.block-table-container{overflow:auto;border-radius:8px;border:1px solid #eee}table{width:100%;border-collapse:collapse}td,th{border:1px solid #eee;padding:12px;text-align:left}th{background:#f9fafb}`);
-    const blob = await zip.generateAsync({ type: "blob" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${projectName}.zip`;
-    link.click();
-  };
+  const zip = new JSZip(); //
+  const imgFolder = zip.folder("images");
+  
+  const minX = Math.min(...blocks.map(b => b.x));
+  const minY = Math.min(...blocks.map(b => b.y));
+
+  const contentHtml = blocks.map(block => {
+    if (!block.content) return "";
+    const style = `position: absolute; left: ${block.x - minX}px; top: ${block.y - minY}px; width: ${block.width}px; height: ${block.height}px;`;
+
+    switch (block.content.type) {
+      case "text": 
+        return `<div class="block-text" style="${style}">${block.content.data}</div>`;
+      case "icon": 
+        return `<div class="block-icon" style="${style}">${block.content.data}</div>`;
+      case "image":
+        const imgName = `img_${block.id.split('-')[0]}.png`;
+        // Extract base64 content after the comma
+        const base64Content = block.content.data.includes(',') ? block.content.data.split(',')[1] : block.content.data;
+        imgFolder?.file(imgName, base64Content, { base64: true });
+        return `<img src="images/${imgName}" class="block-image" style="${style}">`;
+      case "table":
+        const headers = Object.keys(block.content.data[0] || {});
+        return `
+          <div class="block-table-container" style="${style}">
+            <table>
+              <thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
+              <tbody>
+                ${block.content.data.map((row: any) => `
+                  <tr>${Object.values(row).map(v => `<td>${v}</td>`).join('')}</tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>`;
+      default: 
+        return "";
+    }
+  }).join('\n');
+
+  // Add files to ZIP
+  zip.file("index.html", `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page-container">${contentHtml}</div>
+</body>
+</html>`);
+
+  zip.file("styles.css", `
+    body { margin: 0; padding: 40px; font-family: sans-serif; background: #fff; }
+    .page-container { position: relative; width: 100%; min-height: 100vh; }
+    .block-text, .block-icon { display: flex; align-items: center; justify-content: center; text-align: center; }
+    .block-icon { font-size: 2.5rem; }
+    .block-image { object-fit: contain; }
+    .block-table-container { overflow: auto; border-radius: 8px; border: 1px solid #eee; background: white; }
+    table { width: 100%; border-collapse: collapse; }
+    td, th { border: 1px solid #eee; padding: 12px; text-align: left; }
+    th { background: #f9fafb; font-weight: bold; }
+  `);
+
+  const blob = await zip.generateAsync({ type: "blob" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${projectName}.zip`;
+  link.click();
+};
 
   const selectedBlock = blocks.find((b) => b.id === selectedId);
 
