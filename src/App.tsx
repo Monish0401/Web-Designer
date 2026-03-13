@@ -847,6 +847,7 @@ function App() {
               </select>
               <label>3. Select Columns</label>
               <div style={{ maxHeight: '100px', overflowY: 'auto', border: '1px solid #eee', padding: '5px' }}>
+                {columnList.length === 0 && <small>Select a table first</small>}
                 {columnList.map(col => (
                   <div key={col}><input type="checkbox" checked={selection.columns.includes(col)} onChange={() => handleColumnToggle(col)} /> {col}</div>
                 ))}
