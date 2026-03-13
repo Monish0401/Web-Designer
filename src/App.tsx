@@ -835,22 +835,26 @@ function App() {
           <div style={modalContentStyle}>
             <h3>MySQL Data Selector</h3>
             <div className="dropdown-group" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <label>Database</label>
+              <label>1. Select Database</label>
               <select value={selection.db} onChange={e => setSelection({ ...selection, db: e.target.value, table: '', columns: [] })}>
                 <option value="">-- Choose DB --</option>
                 {dbList.map(db => <option key={db} value={db}>{db}</option>)}
               </select>
-              <label>Table</label>
+              <label>2. Select Table</label>
               <select value={selection.table} disabled={!selection.db} onChange={e => setSelection({ ...selection, table: e.target.value, columns: [] })}>
                 <option value="">-- Choose Table --</option>
                 {tableList.map(t => <option key={t} value={t}>{t}</option>)}
               </select>
-              <label>Columns</label>
+              <label>3. Select Columns</label>
               <div style={{ maxHeight: '100px', overflowY: 'auto', border: '1px solid #eee', padding: '5px' }}>
                 {columnList.map(col => (
                   <div key={col}><input type="checkbox" checked={selection.columns.includes(col)} onChange={() => handleColumnToggle(col)} /> {col}</div>
                 ))}
               </div>
+              <label>4. Number of Rows</label>
+              <select value={selection.rows} onChange={e => setSelection({...selection, rows: parseInt(e.target.value)})}>
+                {[5, 10, 20, 50].map(num => <option key={num} value={num}>{num} rows</option>)}
+              </select>
             </div>
             <div style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
               <button onClick={() => setShowModal(false)}>Cancel</button>
