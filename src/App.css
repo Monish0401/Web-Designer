@@ -165,3 +165,35 @@
   justify-content: flex-end;
   gap: 10px;
 }
+
+.custom-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  background-color: #fff;
+}
+
+.custom-data-table th, 
+.custom-data-table td {
+  border: 1px solid #d5d9e1;
+  padding: 10px 8px;
+  text-align: left;
+}
+
+.custom-data-table th {
+  background-color: #f9fafb;
+  text-transform: capitalize;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* Zebra striping for better readability */
+.custom-data-table tbody tr:nth-child(even) {
+  background-color: #fcfcfc;
+}
+
+.empty-table-text {
+  color: #9ca3af;
+  font-style: italic;
+  font-size: 0.8rem;
+}

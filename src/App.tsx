@@ -419,37 +419,37 @@ function App() {
   // };
 
   const exportPageAsHtml = (): void => {
-  if (blocks.length === 0) return;
+    if (blocks.length === 0) return;
 
-  const rawFileName = prompt("Enter a name for your file:", "my-design");
-  if (rawFileName === null) return;
-  const fileName = rawFileName.trim() || "my-design";
+    const rawFileName = prompt("Enter a name for your file:", "my-design");
+    if (rawFileName === null) return;
+    const fileName = rawFileName.trim() || "my-design";
 
-  // 1. Calculate the bounding box to remove empty space
-  const minX = Math.min(...blocks.map(b => b.x));
-  const minY = Math.min(...blocks.map(b => b.y));
+    // 1. Calculate the bounding box to remove empty space
+    const minX = Math.min(...blocks.map(b => b.x));
+    const minY = Math.min(...blocks.map(b => b.y));
 
-  // 2. Generate clean HTML for each block based on state
-  const contentHtml = blocks.map(block => {
-    if (!block.content) return "";
-    
-    // Position styles adjusted by offsets (with 20px padding)
-    const style = `position: absolute; left: ${block.x - minX + 20}px; top: ${block.y - minY + 20}px; width: ${block.width}px; height: ${block.height}px;`;
-    
-    let innerContent = "";
-    switch (block.content.type) {
-      case "text":
-        innerContent = `<div class="block-text">${block.content.data}</div>`;
-        break;
-      case "icon":
-        innerContent = `<div class="block-icon">${block.content.data}</div>`;
-        break;
-      case "image":
-        innerContent = `<img src="${block.content.data}" class="block-image">`;
-        break;
-      case "table":
-        const headers = Object.keys(block.content.data[0] || {});
-        innerContent = `
+    // 2. Generate clean HTML for each block based on state
+    const contentHtml = blocks.map(block => {
+      if (!block.content) return "";
+
+      // Position styles adjusted by offsets (with 20px padding)
+      const style = `position: absolute; left: ${block.x - minX + 20}px; top: ${block.y - minY + 20}px; width: ${block.width}px; height: ${block.height}px;`;
+
+      let innerContent = "";
+      switch (block.content.type) {
+        case "text":
+          innerContent = `<div class="block-text">${block.content.data}</div>`;
+          break;
+        case "icon":
+          innerContent = `<div class="block-icon">${block.content.data}</div>`;
+          break;
+        case "image":
+          innerContent = `<img src="${block.content.data}" class="block-image">`;
+          break;
+        case "table":
+          const headers = Object.keys(block.content.data[0] || {});
+          innerContent = `
           <div class="block-table-container">
             <table>
               <thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
@@ -460,16 +460,16 @@ function App() {
               </tbody>
             </table>
           </div>`;
-        break;
-      default:
-        innerContent = "";
-    }
+          break;
+        default:
+          innerContent = "";
+      }
 
-    return `<div class="rnd-block" style="${style}">${innerContent}</div>`;
-  }).join('\n');
+      return `<div class="rnd-block" style="${style}">${innerContent}</div>`;
+    }).join('\n');
 
-  // 3. Build the full document structure
-  const finalHtml = `
+    // 3. Build the full document structure
+    const finalHtml = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -493,13 +493,13 @@ function App() {
 </body>
 </html>`;
 
-  const blob = new Blob([finalHtml], { type: "text/html;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `${fileName}.html`;
-  link.click();
-};
+    const blob = new Blob([finalHtml], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${fileName}.html`;
+    link.click();
+  };
 
   // const exportPageAsZip = async () => {
   //   if (blocks.length === 0) return;
@@ -539,36 +539,36 @@ function App() {
   // };
 
   const exportPageAsZip = async () => {
-  if (blocks.length === 0) return;
+    if (blocks.length === 0) return;
 
-  const rawFileName = prompt("Project Name:", "my-web-site");
-  if (rawFileName === null) return;
-  const projectName = rawFileName.trim() || "my-web-site";
+    const rawFileName = prompt("Project Name:", "my-web-site");
+    if (rawFileName === null) return;
+    const projectName = rawFileName.trim() || "my-web-site";
 
-  const zip = new JSZip(); //
-  const imgFolder = zip.folder("images");
-  
-  const minX = Math.min(...blocks.map(b => b.x));
-  const minY = Math.min(...blocks.map(b => b.y));
+    const zip = new JSZip(); //
+    const imgFolder = zip.folder("images");
 
-  const contentHtml = blocks.map(block => {
-    if (!block.content) return "";
-    const style = `position: absolute; left: ${block.x - minX}px; top: ${block.y - minY}px; width: ${block.width}px; height: ${block.height}px;`;
+    const minX = Math.min(...blocks.map(b => b.x));
+    const minY = Math.min(...blocks.map(b => b.y));
 
-    switch (block.content.type) {
-      case "text": 
-        return `<div class="block-text" style="${style}">${block.content.data}</div>`;
-      case "icon": 
-        return `<div class="block-icon" style="${style}">${block.content.data}</div>`;
-      case "image":
-        const imgName = `img_${block.id.split('-')[0]}.png`;
-        // Extract base64 content after the comma
-        const base64Content = block.content.data.includes(',') ? block.content.data.split(',')[1] : block.content.data;
-        imgFolder?.file(imgName, base64Content, { base64: true });
-        return `<img src="images/${imgName}" class="block-image" style="${style}">`;
-      case "table":
-        const headers = Object.keys(block.content.data[0] || {});
-        return `
+    const contentHtml = blocks.map(block => {
+      if (!block.content) return "";
+      const style = `position: absolute; left: ${block.x - minX}px; top: ${block.y - minY}px; width: ${block.width}px; height: ${block.height}px;`;
+
+      switch (block.content.type) {
+        case "text":
+          return `<div class="block-text" style="${style}">${block.content.data}</div>`;
+        case "icon":
+          return `<div class="block-icon" style="${style}">${block.content.data}</div>`;
+        case "image":
+          const imgName = `img_${block.id.split('-')[0]}.png`;
+          // Extract base64 content after the comma
+          const base64Content = block.content.data.includes(',') ? block.content.data.split(',')[1] : block.content.data;
+          imgFolder?.file(imgName, base64Content, { base64: true });
+          return `<img src="images/${imgName}" class="block-image" style="${style}">`;
+        case "table":
+          const headers = Object.keys(block.content.data[0] || {});
+          return `
           <div class="block-table-container" style="${style}">
             <table>
               <thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
@@ -579,13 +579,13 @@ function App() {
               </tbody>
             </table>
           </div>`;
-      default: 
-        return "";
-    }
-  }).join('\n');
+        default:
+          return "";
+      }
+    }).join('\n');
 
-  // Add files to ZIP
-  zip.file("index.html", `
+    // Add files to ZIP
+    zip.file("index.html", `
 <!DOCTYPE html>
 <html>
 <head>
@@ -597,7 +597,7 @@ function App() {
 </body>
 </html>`);
 
-  zip.file("styles.css", `
+    zip.file("styles.css", `
     body { margin: 0; padding: 40px; font-family: sans-serif; background: #fff; }
     .page-container { position: relative; width: 100%; min-height: 100vh; }
     .block-text, .block-icon { display: flex; align-items: center; justify-content: center; text-align: center; }
@@ -609,13 +609,13 @@ function App() {
     th { background: #f9fafb; font-weight: bold; }
   `);
 
-  const blob = await zip.generateAsync({ type: "blob" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `${projectName}.zip`;
-  link.click();
-};
+    const blob = await zip.generateAsync({ type: "blob" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${projectName}.zip`;
+    link.click();
+  };
 
   const selectedBlock = blocks.find((b) => b.id === selectedId);
 
@@ -691,7 +691,7 @@ function App() {
             setActiveGuides([]);
             if (d.x !== block.x || d.y !== block.y) {
               //  {/*---Changes---*/}
-              
+
               //  {/*---Changes---*/}
               recordChange();
               setBlocks((prev) => prev.map((b) => (b.id === block.id ? { ...b, x: d.x, y: d.y } : b)));
@@ -728,9 +728,29 @@ function App() {
             {block.content?.type === "icon" && <span style={{ fontSize: "2rem" }}>{block.content.data}</span>}
             {block.content?.type === "image" && <img src={block.content.data} style={{ maxWidth: "100%", maxHeight: "100%" }} alt="content" />}
             {block.content?.type === "table" && (
-              <table border={1} style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
-                <thead><tr>{Object.keys(block.content.data[0] || {}).map((k) => <th key={k}>{k}</th>)}</tr></thead>
-                <tbody>{block.content.data.map((row: any, i: number) => <tr key={i}>{Object.values(row).map((val: any, j) => <td key={j}>{String(val)}</td>)}</tr>)}</tbody>
+              <table className="custom-data-table">
+                <thead>
+                  <tr>
+                    {Object.keys(block.content.data[0]).map((key) => (
+                      <th key={key} scope="col">
+                        {/* Formats "user_id" to "user id" */}
+                        {key.replace(/_/g, ' ')}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {block.content.data.map((row: any, i: number) => (
+                    <tr key={row.id || i}>
+                      {Object.values(row).map((val: any, j) => (
+                        <td key={j}>
+                          {/* Handles null/undefined values gracefully */}
+                          {val === null || val === undefined ? '-' : String(val)}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
               </table>
             )}
           </div>
@@ -804,7 +824,7 @@ function App() {
           }}
         />
       ))}
- {/*---Changes---*/}
+      {/*---Changes---*/}
       {/* --- MySQL Table Selector Modal --- */}
       {showModal && (
         <div style={modalOverlayStyle}>
