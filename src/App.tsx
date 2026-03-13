@@ -728,6 +728,10 @@ function App() {
             {block.content?.type === "icon" && <span style={{ fontSize: "2rem" }}>{block.content.data}</span>}
             {block.content?.type === "image" && <img src={block.content.data} style={{ maxWidth: "100%", maxHeight: "100%" }} alt="content" />}
             {block.content?.type === "table" && (
+              //  <table border={1} style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
+              //   <thead><tr>{Object.keys(block.content.data[0] || {}).map((k) => <th key={k}>{k}</th>)}</tr></thead>
+              //   <tbody>{block.content.data.map((row: any, i: number) => <tr key={i}>{Object.values(row).map((val: any, j) => <td key={j}>{String(val)}</td>)}</tr>)}</tbody>
+              //   </table>
               <table className="custom-data-table">
                 <thead>
                   <tr>
