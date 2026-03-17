@@ -21,6 +21,11 @@ export interface BlockContent {
     headers: string[];
     rows: string[][];
     template?: 'default' | 'striped' | 'bordered' | 'minimal';
+    database?: string;
+    table?: string;
+    availableColumns?: string[];
+    selectedColumns?: string[];
+    rowCount?: number;
   };
   buttonText?: string;
   buttonOnClick?: string; // JavaScript code to execute
