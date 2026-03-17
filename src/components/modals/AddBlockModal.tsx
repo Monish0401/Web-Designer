@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Upload } from 'lucide-react';
-import { BlockContent } from '../../types';
+import { BlockContent } from '../../types/index';
 
 interface AddBlockModalProps {
   isOpen: boolean;
@@ -44,8 +44,8 @@ export const AddBlockModal: React.FC<AddBlockModalProps> = ({
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setContent({ 
-          ...content, 
+        setContent({
+          ...content,
           imageFile: reader.result as string,
           imageAlt: file.name
         });
@@ -149,7 +149,11 @@ export const AddBlockModal: React.FC<AddBlockModalProps> = ({
                 onChange={(e) =>
                   setContent({
                     ...content,
-                    listItems: e.target.value.split('\n').filter((item) => item.trim()),
+                    // Option A: Wrap each item in an array to match string[][]
+                    listItems: e.target.value
+                      .split('\n')
+                      .filter((item) => item.trim())
+                      .map((item) => [item]), // This turns "string" into ["string"],
                   })
                 }
                 placeholder="Item 1&#10;Item 2&#10;Item 3"

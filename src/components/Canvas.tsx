@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Block as BlockType } from '../types';
+import { Block as BlockType } from '../types/index';
 import { Block } from './Block';
 import { FloatingToolbar } from './FloatingToolbar';
 import { TopControls } from './TopControls';
