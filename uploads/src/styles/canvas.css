@@ -1,0 +1,934 @@
+/* ========================================
+   Canvas Application Styles
+   ======================================== */
+
+/* Main Canvas Container */
+.app-canvas {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+  background: #f0f2f5;
+  background-image: 
+    linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+  font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ========================================
+   Top Controls
+   ======================================== */
+.top-controls {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 16px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.btn-primary {
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #fff;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  border: 1px solid #d5d9e1;
+  border-radius: 8px;
+  background: #fff;
+  color: #374151;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.88rem;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ========================================
+   Top Menu Actions
+   ======================================== */
+.top-menu-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 8px;
+  border-left: 1px solid #e5e7eb;
+}
+
+.top-menu-actions button {
+  padding: 6px 10px;
+  cursor: pointer;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.top-menu-actions button:hover:not(:disabled) {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.top-menu-actions button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.top-menu-actions .danger {
+  color: #dc2626;
+}
+
+.top-menu-actions .danger:hover:not(:disabled) {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+/* ========================================
+   Utility Elements
+   ======================================== */
+.tip-text {
+  color: #6b7280;
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+.count-badge {
+  font-size: 0.82rem;
+  background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+  color: #3730a3;
+  border: 1px solid #c7d2fe;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-weight: 600;
+}
+
+.divider {
+  width: 1px;
+  height: 24px;
+  background: #e5e7eb;
+  margin: 0 4px;
+}
+
+/* ========================================
+   Empty State
+   ======================================== */
+.empty-state {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: #6b7280;
+  max-width: 400px;
+}
+
+.empty-state h2 {
+  margin: 0 0 8px;
+  color: #1f2937;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.empty-state p {
+  color: #6b7280;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* ========================================
+   Block Styles
+   ======================================== */
+.canvas-block {
+  position: absolute;
+  background: #ffffff;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  cursor: move;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.canvas-block:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.canvas-block.selected {
+  border-color: #2563eb;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.25);
+}
+
+.canvas-block.dragging {
+  opacity: 0.7;
+  cursor: grabbing;
+  z-index: 100;
+}
+
+.block-content {
+  flex: 1;
+  overflow: auto;
+  padding: 4px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+.empty-block-text {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+/* ========================================
+   Resize Handles
+   ======================================== */
+.resize-handle {
+  position: absolute;
+  background: #2563eb;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+}
+
+/* Corner handles */
+.resize-handle-nw,
+.resize-handle-ne,
+.resize-handle-sw,
+.resize-handle-se {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.resize-handle-nw {
+  top: -5px;
+  left: -5px;
+  cursor: nw-resize;
+}
+
+.resize-handle-ne {
+  top: -5px;
+  right: -5px;
+  cursor: ne-resize;
+}
+
+.resize-handle-sw {
+  bottom: -5px;
+  left: -5px;
+  cursor: sw-resize;
+}
+
+.resize-handle-se {
+  bottom: -5px;
+  right: -5px;
+  cursor: se-resize;
+}
+
+/* Edge handles */
+.resize-handle-n,
+.resize-handle-s {
+  width: 40px;
+  height: 6px;
+  border-radius: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.resize-handle-w,
+.resize-handle-e {
+  width: 6px;
+  height: 40px;
+  border-radius: 3px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.resize-handle-n {
+  top: -3px;
+  cursor: n-resize;
+}
+
+.resize-handle-s {
+  bottom: -3px;
+  cursor: s-resize;
+}
+
+.resize-handle-w {
+  left: -3px;
+  cursor: w-resize;
+}
+
+.resize-handle-e {
+  right: -3px;
+  cursor: e-resize;
+}
+
+/* ========================================
+   Drag to Draw
+   ======================================== */
+.draw-preview {
+  position: absolute;
+  border: 2px dashed #2563eb;
+  background: rgba(37, 99, 235, 0.1);
+  border-radius: 8px;
+  pointer-events: none;
+  z-index: 50;
+}
+
+.draw-mode-hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #6b7280;
+  font-size: 1.2rem;
+  pointer-events: none;
+  z-index: 1;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 12px 24px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* ========================================
+   Floating Toolbar
+   ======================================== */
+.floating-toolbar {
+  position: absolute;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  padding: 8px;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.15);
+  display: flex;
+  gap: 6px;
+  z-index: 1000;
+  backdrop-filter: blur(8px);
+}
+
+.floating-toolbar button {
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.floating-toolbar button:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.floating-toolbar .danger {
+  color: #dc2626;
+}
+
+.floating-toolbar .danger:hover {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+/* ========================================
+   Modal Styles
+   ======================================== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.modal-content {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  margin-bottom: 20px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.modal-body {
+  margin-bottom: 24px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* ========================================
+   Form Elements
+   ======================================== */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 0.9rem;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* ========================================
+   Dropdown and Checkboxes
+   ======================================== */
+.dropdown-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.dropdown-group label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.dropdown-group select {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 0.9rem;
+}
+
+.checkbox-dropdown {
+  max-height: 150px;
+  overflow-y: auto;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 10px;
+  background: #f9fafb;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+}
+
+.checkbox-item:last-child {
+  margin-bottom: 0;
+}
+
+/* ========================================
+   Table Styles
+   ======================================== */
+.custom-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  background-color: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.custom-data-table th,
+.custom-data-table td {
+  border: 1px solid #e5e7eb;
+  padding: 10px 12px;
+  text-align: left;
+}
+
+.custom-data-table th {
+  background-color: #f9fafb;
+  text-transform: capitalize;
+  font-weight: 600;
+  color: #374151;
+}
+
+.custom-data-table tbody tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+.custom-data-table tbody tr:hover {
+  background-color: #f3f4f6;
+}
+
+.empty-table-text {
+  color: #9ca3af;
+  font-style: italic;
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 20px;
+}
+
+/* ========================================
+   Table Templates
+   ======================================== */
+.table-striped tbody tr:nth-child(odd) {
+  background-color: #f9fafb;
+}
+
+.table-bordered th,
+.table-bordered td {
+  border: 2px solid #d1d5db;
+}
+
+.table-minimal {
+  border: none;
+}
+
+.table-minimal th,
+.table-minimal td {
+  border: none;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* ========================================
+   Button Block Styles
+   ======================================== */
+.block-button {
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.block-button-primary {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #fff;
+}
+
+.block-button-primary:hover {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+  transform: translateY(-1px);
+}
+
+.block-button-secondary {
+  background: #6b7280;
+  color: #fff;
+}
+
+.block-button-secondary:hover {
+  background: #4b5563;
+}
+
+.block-button-success {
+  background: #10b981;
+  color: #fff;
+}
+
+.block-button-success:hover {
+  background: #059669;
+}
+
+.block-button-danger {
+  background: #ef4444;
+  color: #fff;
+}
+
+.block-button-danger:hover {
+  background: #dc2626;
+}
+
+.block-button-outline {
+  background: transparent;
+  border: 2px solid #2563eb;
+  color: #2563eb;
+}
+
+.block-button-outline:hover {
+  background: #2563eb;
+  color: #fff;
+}
+
+/* ========================================
+   Block Type Selector Modal
+   ======================================== */
+.block-type-selector-modal {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 600px;
+  width: 90%;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.block-type-title {
+  margin: 0 0 24px;
+  font-size: 1.5rem;
+  color: #1f2937;
+  font-weight: 600;
+  text-align: center;
+}
+
+.block-type-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+}
+
+.block-type-card {
+  border: 2px solid #e5e7eb;
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.block-type-card:hover {
+  border-color: #2563eb;
+  background: #f0f9ff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+}
+
+.block-type-icon {
+  color: #2563eb;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: center;
+}
+
+.block-type-label {
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 4px;
+  font-size: 1rem;
+}
+
+.block-type-description {
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+/* ========================================
+   Style Panel
+   ======================================== */
+.style-panel {
+  position: absolute;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.15);
+  z-index: 1000;
+  width: 320px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.style-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 1;
+}
+
+.style-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 1rem;
+}
+
+.style-close-btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.style-close-btn:hover {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+.style-panel-body {
+  padding: 16px;
+}
+
+.style-group {
+  margin-bottom: 16px;
+}
+
+.style-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.style-select {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.style-select:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.style-button-group {
+  display: flex;
+  gap: 8px;
+}
+
+.style-icon-btn {
+  flex: 1;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  border-radius: 6px;
+  padding: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.style-icon-btn:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.style-icon-btn.active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+
+.color-input-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.style-color-input {
+  width: 50px;
+  height: 40px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.style-text-input {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  font-size: 0.9rem;
+}
+
+.style-text-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.template-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.template-btn {
+  border: 1px solid #d1d5db;
+  background: #fff;
+  border-radius: 6px;
+  padding: 10px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.template-btn:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.template-btn.active {
+  background: #eff6ff;
+  border-color: #2563eb;
+  color: #2563eb;
+}
+
+/* ========================================
+   Upload Area
+   ======================================== */
+.upload-area {
+  position: relative;
+  margin-bottom: 8px;
+}
+
+.file-input {
+  display: none;
+}
+
+.upload-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 32px;
+  border: 2px dashed #d1d5db;
+  border-radius: 8px;
+  background: #f9fafb;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #6b7280;
+}
+
+.upload-label:hover {
+  border-color: #2563eb;
+  background: #f0f9ff;
+  color: #2563eb;
+}
+
+.image-preview {
+  margin-top: 12px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+}
+
+.image-preview img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.form-hint {
+  display: block;
+  color: #6b7280;
+  font-size: 0.8rem;
+  margin-top: 4px;
+}
+
+/* ========================================
+   Responsive Design
+   ======================================== */
+@media (max-width: 768px) {
+  .top-controls {
+    flex-wrap: wrap;
+    max-width: calc(100vw - 32px);
+  }
+
+  .modal-content {
+    width: 95%;
+    padding: 20px;
+  }
+
+  .style-panel {
+    width: 280px;
+  }
+
+  .block-type-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

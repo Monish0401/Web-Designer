@@ -1,0 +1,199 @@
+.app-canvas {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+  background: #f0f2f5;
+  /* background: radial-gradient(circle at 15% 10%, #eef3ff, #f6f8fc 45%, #f9fafc); */
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+.top-controls {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid #d9dfea;
+  border-radius: 12px;
+  padding: 10px 12px;
+  backdrop-filter: blur(4px);
+}
+
+.btn-primary {
+  border: none;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #fff;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.top-menu-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 2px;
+}
+
+.top-menu-actions button {  
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.top-menu-actions button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.top-menu-actions .danger {
+  color: #b91c1c;
+}
+
+.tip-text {
+  color: #5d677b;
+  font-size: 0.88rem;
+}
+
+.count-badge {
+  font-size: 0.82rem;
+  background: #eef2ff;
+  color: #334155;
+  border: 1px solid #c7d2fe;
+  border-radius: 999px;
+  padding: 4px 8px;
+}
+
+.empty-state {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: #6b7280;
+}
+
+.empty-state h2 {
+  margin: 0 0 6px;
+  color: #1f2937;
+}
+
+.block-content {
+  flex: 1;
+  overflow: auto;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-block-text {
+  color: #9ca3af;
+}
+
+.floating-toolbar {
+  position: absolute;
+  background-color: white;
+  border: 1px solid #d9dfea;
+  padding: 8px;
+  border-radius: 10px;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.12);
+  display: flex;
+  gap: 8px;
+  z-index: 100;
+}
+
+.floating-toolbar button {
+  border: 1px solid #d5d9e1;
+  background: #fff;
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.floating-toolbar .danger {
+  color: #b91c1c;
+}
+
+.divider {
+  width: 1px;
+  background: #ddd;
+  margin: 0 4px;
+}
+.dropdown-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.dropdown-group label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #666;
+}
+
+.dropdown-group select {
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+}
+
+.checkbox-dropdown {
+  max-height: 120px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 8px;
+  background: #fdfdfd;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 0.9rem;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.custom-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  background-color: #fff;
+}
+
+.custom-data-table th, 
+.custom-data-table td {
+  border: 1px solid #d5d9e1;
+  padding: 10px 8px;
+  text-align: left;
+}
+
+.custom-data-table th {
+  background-color: #f9fafb;
+  text-transform: capitalize;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* Zebra striping for better readability */
+.custom-data-table tbody tr:nth-child(even) {
+  background-color: #fcfcfc;
+}
+
+.empty-table-text {
+  color: #9ca3af;
+  font-style: italic;
+  font-size: 0.8rem;
+}
