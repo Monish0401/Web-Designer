@@ -602,7 +602,7 @@ export const AddBlockModal: React.FC<AddBlockModalProps> = ({
                   setBlockType(e.target.value);
                   setContent({});
                 }}
-                disabled={editMode}
+                disabled={false}
               >
                 <option value="heading">Heading</option>
                 <option value="text">Text</option>

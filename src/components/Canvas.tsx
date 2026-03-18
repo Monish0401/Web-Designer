@@ -27,6 +27,10 @@ export const Canvas: React.FC = () => {
     const [pendingBlockCoordinates, setPendingBlockCoordinates] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
     const [isStylePanelOpen, setIsStylePanelOpen] = useState(false);
     const canvasRef = useRef<HTMLDivElement>(null);
+    const createBlockId = () =>
+        typeof crypto !== 'undefined' && 'randomUUID' in crypto
+            ? `block-${crypto.randomUUID()}`
+            : `block-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
     const selectedBlock = blocks.find((b) => b.id === selectedBlockId);
 
@@ -39,7 +43,8 @@ export const Canvas: React.FC = () => {
 
     const handleAddBlock = (type: string, content: any) => {
         const newBlock: BlockType = {
-            id: `block-${Date.now()}`,
+            // id: `block-${Date.now()}`,
+            id: createBlockId(),
             type: type as any,
             x: 100 + blocks.length * 20,
             y: 100 + blocks.length * 20,
@@ -71,7 +76,8 @@ export const Canvas: React.FC = () => {
 
         const newBlock: BlockType = {
             ...blockToDuplicate,
-            id: `block-${Date.now()}`,
+            // id: `block-${Date.now()}`,
+            id: createBlockId(),
             x: blockToDuplicate.x + 20,
             y: blockToDuplicate.y + 20,
         };
@@ -361,7 +367,8 @@ export const Canvas: React.FC = () => {
         }
 
         const newBlock: BlockType = {
-            id: `block-${Date.now()}`,
+            // id: `block-${Date.now()}`,
+            id: createBlockId(),
             type: type as any,
             x: pendingBlockCoordinates.x,
             y: pendingBlockCoordinates.y,

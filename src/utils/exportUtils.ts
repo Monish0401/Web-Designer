@@ -689,6 +689,33 @@ const getCanvasBounds = (blocks: Block[]) => {
 const getImageSource = (block: Block) =>
   block.content.imageFile || block.content.imageUrl || ((block.content as any).data as string) || 'https://via.placeholder.com/300x200';
 
+const sanitizeFileToken = (value: string) => value.replace(/[^a-zA-Z0-9_-]/g, '');
+
+const getExtensionFromMime = (mimeType: string) => {
+  const mime = mimeType.toLowerCase();
+  if (mime.includes('png')) return 'png';
+  if (mime.includes('jpeg') || mime.includes('jpg')) return 'jpg';
+  if (mime.includes('webp')) return 'webp';
+  if (mime.includes('gif')) return 'gif';
+  if (mime.includes('svg')) return 'svg';
+  return 'png';
+};
+
+const extractExtensionFromSource = (source: string, fallback = 'png') => {
+  if (source.startsWith('data:image/')) {
+    const mime = source.slice(5, source.indexOf(';'));
+    return getExtensionFromMime(mime);
+  }
+
+  try {
+    const pathname = new URL(source).pathname;
+    const ext = pathname.split('.').pop();
+    return ext ? ext.toLowerCase() : fallback;
+  } catch {
+    return fallback;
+  }
+};
+
 // Add main HTML file
 
 const getTableData = (block: Block) => {
@@ -772,9 +799,15 @@ const renderBlocks = (blocks: Block[], includeScriptBindings: boolean) => {
         `min-height: ${block.height}px`,
         `background: ${block.style?.backgroundColor || '#ffffff'}`,
         `color: ${block.style?.textColor || '#000000'}`,
-        `border-color: ${block.style?.borderColor || '#d5d9e1'}`,
+        // `border-color: ${block.style?.borderColor || '#d5d9e1'}`,
         `border-radius: ${block.style?.borderRadius || '8px'}`,
         `padding: ${block.style?.padding || '16px'}`,
+        `font-family: ${block.style?.fontFamily || 'inherit'}`,
+        `font-size: ${block.style?.fontSize || 'inherit'}`,
+        `font-weight: ${block.style?.fontWeight || 'inherit'}`,
+        `font-style: ${block.style?.fontStyle || 'normal'}`,
+        `text-decoration: ${block.style?.textDecoration || 'none'}`,
+        `text-align: ${block.style?.textAlign || 'left'}`,
       ].join('; ');
 
       return `<div class="export-block" style="${style}">${renderBlockContent(block, includeScriptBindings)}</div>`;
@@ -809,8 +842,8 @@ const baseCss = (blocks: Block[]) => {
 
 .export-block {
   position: absolute;
-  border: 1px solid;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: none;
+  box-shadow: none;
 }
 .export-heading { margin: 0; font-size: 1.5rem; font-weight: 600; }
 .export-text { margin: 0; line-height: 1.6; }
@@ -902,15 +935,47 @@ export const downloadHTML = (blocks: Block[], filename: string = 'canvas-export.
 
 export const downloadZIP = async (blocks: Block[], filename: string = 'canvas-export.zip') => {
   const zip = new JSZip();
+  const processedBlocks = await Promise.all(
+    blocks.map(async (block, index) => {
+      if (block.type !== 'image') return block;
 
-  zip.file('index.html', buildHtml(blocks, true));
-  zip.file('styles.css', baseCss(blocks));
+      const source = getImageSource(block);
+      if (!source) return block;
+
+      try {
+        const response = await fetch(source);
+        if (!response.ok) return block;
+
+        const blob = await response.blob();
+        const extensionFromMime = getExtensionFromMime(blob.type || '');
+        const extensionFromSource = extractExtensionFromSource(source, extensionFromMime);
+        const extension = extensionFromSource || extensionFromMime || 'png';
+        const fileName = `assets/image-${sanitizeFileToken(block.id) || index}.${extension}`;
+
+        zip.file(fileName, blob);
+
+        const { imageFile, ...restContent } = block.content;
+        return {
+          ...block,
+          content: {
+            ...restContent,
+            imageUrl: fileName,
+          },
+        };
+      } catch {
+        return block;
+      }
+    })
+  );
+
+  zip.file('index.html', buildHtml(processedBlocks, true));
+  zip.file('styles.css', baseCss(processedBlocks));
   zip.file('script.js', scriptJs);
 
 
   zip.file(
     'README.md',
-    `# Canvas Export\n\nGenerated on: ${new Date().toLocaleString()}\nTotal blocks: ${blocks.length}\n\nOpen index.html in a browser.\n`
+    `# Canvas Export\n\nGenerated on: ${new Date().toLocaleString()}\nTotal blocks: ${processedBlocks.length}\n\nOpen index.html in a browser.\n`
   );
 
   // Generate and download ZIP
