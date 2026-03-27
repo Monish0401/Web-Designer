@@ -796,7 +796,7 @@ const renderBlocks = (blocks: Block[], includeScriptBindings: boolean) => {
         `left: ${block.x - bounds.minX + bounds.padding}px`,
         `top: ${block.y - bounds.minY + bounds.padding}px`,
         `width: ${block.width}px`,
-        `min-height: ${block.height}px`,
+        `height: ${block.height}px`,
         `background: ${block.style?.backgroundColor || '#ffffff'}`,
         `color: ${block.style?.textColor || '#000000'}`,
         // `border-color: ${block.style?.borderColor || '#d5d9e1'}`,
