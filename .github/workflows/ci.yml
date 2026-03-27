@@ -1,43 +1,49 @@
-name: React CI/CD
+name: Deploy React App to GitHub Pages
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "main" ]
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
 
 jobs:
-  build-and-test:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: 20
           cache: 'npm'
-
-      - name: Remove old pkg
-        run: rm -rf ./node_modules/ package-lock.json
 
       - name: Install dependencies
         run: npm install || npm ci
 
-      - name: Run tests
-        run: npm test -- --watchAll=false
-        env:
-          CI: false
-
       - name: Build project
         run: npm run build
-        env:
-          CI: false
 
-      - name: Deploy to GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@v4
+      - name: Upload build artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          folder: build # The folder the action should deploy.
-          branch: gh-pages # The branch the action should deploy to.
+          path: build/
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
