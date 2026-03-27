@@ -27,6 +27,8 @@ export const Canvas: React.FC = () => {
     const [pendingBlockCoordinates, setPendingBlockCoordinates] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
     const [isStylePanelOpen, setIsStylePanelOpen] = useState(false);
     const canvasRef = useRef<HTMLDivElement>(null);
+    const MIN_BLOCK_WIDTH = 100;
+    const MIN_BLOCK_HEIGHT = 80;
     const createBlockId = () =>
         typeof crypto !== 'undefined' && 'randomUUID' in crypto
             ? `block-${crypto.randomUUID()}`
@@ -223,9 +225,20 @@ export const Canvas: React.FC = () => {
                     break;
             }
 
-            // Minimum size constraints
-            if (newWidth < 100) newWidth = 100;
-            if (newHeight < 80) newHeight = 80;
+            // Minimum size constraints with anchored edges
+            if (newWidth < MIN_BLOCK_WIDTH) {
+                if (resizing.handle.includes('w')) {
+                    newX = resizeStart.blockX + (resizeStart.width - MIN_BLOCK_WIDTH);
+                }
+                newWidth = MIN_BLOCK_WIDTH;
+            }
+
+            if (newHeight < MIN_BLOCK_HEIGHT) {
+                if (resizing.handle.includes('n')) {
+                    newY = resizeStart.blockY + (resizeStart.height - MIN_BLOCK_HEIGHT);
+                }
+                newHeight = MIN_BLOCK_HEIGHT;
+            }
 
             const newBlocks = blocks.map((b) =>
                 b.id === resizing.blockId
@@ -382,7 +395,10 @@ export const Canvas: React.FC = () => {
         saveToHistory(newBlocks);
         setSelectedBlockId(newBlock.id);
         setPendingBlockCoordinates(null);
-        toast.success('Block created - click Edit to customize');
+        setIsBlockTypeSelectorOpen(false);
+        setEditingBlock(newBlock);
+        setIsModalOpen(true);
+        toast.success('Block created - customize details');
     };
 
     const handleStyleChange = (style: any) => {
