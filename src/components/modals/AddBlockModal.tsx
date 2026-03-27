@@ -334,7 +334,7 @@ export const AddBlockModal: React.FC<AddBlockModalProps> = ({
                     // Option A: Wrap each item in an array to match string[][]
                     listItems: e.target.value
                       .split('\n')
-                      .filter((item) => item.trim())
+                      // .filter((item) => item.trim())
                       .map((item) => [item]), // This turns "string" into ["string"],
                   })
                 }
