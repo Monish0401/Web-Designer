@@ -7,10 +7,10 @@ import './styles/canvas.css';
 export default function App() {
   return (
     <>
-      <Header />
+      <Header theme={''}/>
       <Canvas />
       <Toaster position="bottom-right" />
-      <Footer />
+      <Footer theme={''}/>
     </>
   );
 }
