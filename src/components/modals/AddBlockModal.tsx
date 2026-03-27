@@ -31,6 +31,14 @@ export const AddBlockModal: React.FC<AddBlockModalProps> = ({
   const [columnList, setColumnList] = useState<string[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(false);
 
+  const activeBlockType = editMode ? initialType : blockType;
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setBlockType(activeBlockType);
+    setContent(content);
+  }, [isOpen, activeBlockType, content]);
+
   const tableData = content.tableData || {
     headers: ['Column 1', 'Column 2'],
     rows: [['', '']],
@@ -73,7 +81,7 @@ export const AddBlockModal: React.FC<AddBlockModalProps> = ({
   };
 
   useEffect(() => {
-    if (!isOpen || blockType !== 'table') return;
+    if (!isOpen || activeBlockType !== 'table') return;
 
     const fetchDatabases = async () => {
       setIsLoadingData(true);
@@ -88,10 +96,10 @@ export const AddBlockModal: React.FC<AddBlockModalProps> = ({
     };
 
     fetchDatabases();
-  }, [isOpen, blockType]);
+  }, [isOpen, activeBlockType]);
 
   useEffect(() => {
-    if (blockType !== 'table' || !tableData.database) {
+    if (activeBlockType !== 'table' || !tableData.database) {
       setTableList([]);
       return;
     }
@@ -111,10 +119,10 @@ export const AddBlockModal: React.FC<AddBlockModalProps> = ({
     };
 
     fetchTables();
-  }, [blockType, tableData.database]);
+  }, [activeBlockType, tableData.database]);
 
   useEffect(() => {
-    if (blockType !== 'table' || !tableData.database || !tableData.table) {
+    if (activeBlockType !== 'table' || !tableData.database || !tableData.table) {
       setColumnList([]);
       return;
     }
@@ -145,13 +153,13 @@ export const AddBlockModal: React.FC<AddBlockModalProps> = ({
 
     fetchColumns();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [blockType, tableData.database, tableData.table]);
+  }, [activeBlockType, tableData.database, tableData.table]);
 
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onAdd(blockType, content);
+    onAdd(activeBlockType, content);
     onClose();
     // Reset form
     setBlockType('text');
@@ -229,7 +237,7 @@ export const AddBlockModal: React.FC<AddBlockModalProps> = ({
   };
 
   const renderContentFields = () => {
-    switch (blockType) {
+    switch (activeBlockType) {
       case 'heading':
         return (
           <div className="form-group">
@@ -597,8 +605,9 @@ export const AddBlockModal: React.FC<AddBlockModalProps> = ({
             <div className="form-group">
               <label>Block Type</label>
               <select
-                value={blockType}
+                value={activeBlockType}
                 onChange={(e) => {
+                  if (editMode) return;
                   setBlockType(e.target.value);
                   setContent({});
                 }}
