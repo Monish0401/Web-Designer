@@ -47,10 +47,10 @@ export const TopControls: React.FC<TopControlsProps> = ({
       <div className="divider" />
 
       <div className="top-menu-actions">
-        <button onClick={onExportHTML} title="Export as HTML">
+        {/* <button onClick={onExportHTML} title="Export as HTML">
           <FileCode size={16} style={{ marginRight: '4px', display: 'inline-block', verticalAlign: 'middle' }} />
           HTML
-        </button>
+        </button> */}
         <button onClick={onExportZIP} title="Export as ZIP">
           <Download size={16} style={{ marginRight: '4px', display: 'inline-block', verticalAlign: 'middle' }} />
           ZIP
