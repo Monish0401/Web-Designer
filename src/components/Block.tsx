@@ -39,6 +39,7 @@ export const Block: React.FC<BlockProps> = ({
       textDecoration: block.style?.textDecoration,
       textAlign: block.style?.textAlign,
       color: block.style?.textColor,
+      width: '100%',
     };
 
     switch (block.type) {
@@ -149,7 +150,19 @@ export const Block: React.FC<BlockProps> = ({
       onMouseDown={handleMouseDown}
       onClick={handleClick}
     >
-      <div className="block-content">{renderContent()}</div>
+      <div
+        className="block-content"
+        style={{
+          justifyContent:
+            block.style?.textAlign === 'center'
+              ? 'center'
+              : block.style?.textAlign === 'right'
+                ? 'flex-end'
+                : 'flex-start',
+        }}
+      >
+        {renderContent()}
+      </div>
       
       {isSelected && (
         <>
