@@ -31,6 +31,8 @@ jobs:
 
       - name: Build project
         run: npm run build
+        env:
+          CI: false
 
       - name: Upload build artifact
         uses: actions/upload-pages-artifact@v3
