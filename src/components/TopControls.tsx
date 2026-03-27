@@ -31,7 +31,7 @@ export const TopControls: React.FC<TopControlsProps> = ({
         Add Block
       </button>
 
-      <span className="count-badge">{blockCount} blocks</span>
+      <span className="count-badge">{blockCount} block{blockCount === 1 ? "" : "s"}</span>
 
       <div className="divider" />
 
