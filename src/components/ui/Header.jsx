@@ -26,7 +26,7 @@ const Header = ({ theme }) => {
       />
       {/* theme variable must be available, assuming it's passed as a prop */}
       <h1 style={{fontSize: "1.75rem", fontWeight: "600"}} className={`mb-2 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-        Software Defined Radio(SDR) Payload Commanding User Inteface
+        Canvasflows Blockcraft
       </h1>
       {/* Second <img> tag correction: style object must be wrapped in curly braces {} 
           and the property 'style' must be present. */}

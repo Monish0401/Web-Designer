@@ -432,7 +432,7 @@ export const Canvas: React.FC = () => {
 
                 {blocks.length === 0 && !isDrawing && (
                     <div className="empty-state">
-                        <h2>Welcome to Web Designer Canvas</h2>
+                        <h2>Welcome to Canvasflows Blockcraft</h2>
                         <p>Click "Add Block" or drag on the canvas to draw a new block</p>
                     </div>
                 )}
