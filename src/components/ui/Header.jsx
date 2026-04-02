@@ -24,6 +24,8 @@ const Header = ({ theme }) => {
         src="Space_Applications_Centre_logo.png"
         alt="SAC Logo"
       />
+      <img src="SDR.png" alt="SDR" style={{ display: 'none' }} />
+      <img src="Canvas.png" alt="Canvas" style={{ display: 'none' }} />
       {/* theme variable must be available, assuming it's passed as a prop */}
       <h1 style={{fontSize: "1.75rem", fontWeight: "600"}} className={`mb-2 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
         Canvasflows Blockcraft
