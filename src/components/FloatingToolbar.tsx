@@ -19,6 +19,7 @@ export const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
   return (
     <div
       className="floating-toolbar"
+      onClick = {(e) => e.stopPropagation()}
       style={{
         left: position.x,
         top: position.y - 50,
