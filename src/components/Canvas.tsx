@@ -476,7 +476,7 @@ export const Canvas: React.FC = () => {
                             setEditingBlock(selectedBlock);
                             setIsModalOpen(true);
                         }}
-                        onStyle={() => setIsStylePanelOpen(true)}
+                        onStyle={(e?:React.MouseEvent) => {e?.stopPropagation();setIsStylePanelOpen(true);}}
                         onDuplicate={handleDuplicateBlock}
                         onDelete={handleDeleteBlock}
                     />
