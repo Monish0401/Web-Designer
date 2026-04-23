@@ -12,8 +12,8 @@ interface LeafletMapBlockProps {
 }
 
 const getAssetUrls = (basePath: string) => ({
-  js: `${basePath.replace(/\/$/, '')}/leaflet.js`,
-  css: `${basePath.replace(/\/$/, '')}/leaflet.css`,
+  js: `${basePath.replace(/\/$/, '')}./leaflet.js`,
+  css: `${basePath.replace(/\/$/, '')}./leaflet.css`,
 });
 
 const ensureLeafletLoaded = async (assetBasePath: string) => {
@@ -42,7 +42,7 @@ const getTileLayers = (L: any, mapData?: BlockContent['mapData']) => {
   const mode = mapData?.tileSourceMode ?? 'offline';
 
   if (mode === 'offline') {
-    const urlTemplate = mapData?.tileUrlTemplate || '/map-tiles/{z}/{x}/{y}.png';
+    const urlTemplate = mapData?.tileUrlTemplate || './map-tiles/{z}/{x}/{y}.png';
 
     return {
       offline: L.tileLayer(urlTemplate, {
