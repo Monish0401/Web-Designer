@@ -932,3 +932,45 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+.inline-checkbox label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+.leaflet-map-wrapper {
+  width: 100%;
+  min-height: 240px;
+  height: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.map-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+  color: #b91c1c;
+  background: #fee2e2;
+}
+
+.block-lock-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #111827;
+  color: #fff;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  z-index: 4;
+}
+
+.map-error code {
+  background: #fecaca;
+  border-radius: 4px;
+  padding: 2px 4px;
+  margin-left: 4px;
+}

@@ -1,12 +1,13 @@
 export interface Block {
   id: string;
-  type: 'text' | 'heading' | 'image' | 'table' | 'list' | 'button';
+  type: 'text' | 'heading' | 'image' | 'table' | 'list' | 'button' | 'map';
   x: number;
   y: number;
   width: number;
   height: number;
   content: BlockContent;
   style?: BlockStyle;
+  locked?: boolean;
 }
 
 export interface BlockContent {
@@ -26,6 +27,21 @@ export interface BlockContent {
     availableColumns?: string[];
     selectedColumns?: string[];
     rowCount?: number;
+  };
+  mapData?: {
+    latitude: number;
+    longitude: number;
+    zoom: number;
+    markerLabel?: string;
+    tileStyle?: 'street' | 'satellite' | 'terrain';
+    showScale?: boolean;
+    showZoomControl?: boolean;
+    enableScrollZoom?: boolean;
+    enableLiveLocation?: boolean;
+    showLayerControl?: boolean;
+    tileSourceMode?: 'offline' | 'online';
+    tileUrlTemplate?: string;
+    leafletAssetPath?: string;
   };
   buttonText?: string;
   buttonOnClick?: string; // JavaScript code to execute

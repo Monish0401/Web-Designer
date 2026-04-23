@@ -15,6 +15,22 @@ interface AddBlockModalProps {
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000';
 
+const defaultMapData: NonNullable<BlockContent['mapData']> = {
+  latitude: 20.5937,
+  longitude: 78.9629,
+  zoom: 5,
+  markerLabel: 'Default map marker',
+  tileStyle: 'street' as const,
+  showScale: true,
+  showZoomControl: true,
+  enableScrollZoom: true,
+  enableLiveLocation: false,
+  showLayerControl: true,
+  tileSourceMode: 'offline' as const,
+  tileUrlTemplate: '/map-tiles/{z}/{x}/{y}.png',
+  leafletAssetPath: '/leaflet',
+};
+
 export const AddBlockModal: React.FC<AddBlockModalProps> = ({
   isOpen,
   onClose,
@@ -32,6 +48,7 @@ export const AddBlockModal: React.FC<AddBlockModalProps> = ({
   const [isLoadingData, setIsLoadingData] = useState(false);
 
   const activeBlockType = editMode ? initialType : blockType;
+  const mapData = content.mapData || defaultMapData;
 
   useEffect(() => {
     if (!isOpen) return;
@@ -235,6 +252,140 @@ export const AddBlockModal: React.FC<AddBlockModalProps> = ({
       setIsLoadingData(false);
     }
   };
+
+  const renderMapFields = () => (
+    <>
+      <div className="form-group">
+        <label>Latitude</label>
+        <input
+          type="number"
+          step="0.0001"
+          value={mapData.latitude}
+          onChange={(e) =>
+            setContent({ ...content, mapData: { ...mapData, latitude: Number(e.target.value) } })
+          }
+        />
+      </div>
+
+      <div className="form-group">
+        <label>Longitude</label>
+        <input
+          type="number"
+          step="0.0001"
+          value={mapData.longitude}
+          onChange={(e) =>
+            setContent({ ...content, mapData: { ...mapData, longitude: Number(e.target.value) } })
+          }
+        />
+      </div>
+
+      <div className="form-group">
+        <label>Zoom</label>
+        <input
+          type="number"
+          min={1}
+          max={19}
+          value={mapData.zoom}
+          onChange={(e) => setContent({ ...content, mapData: { ...mapData, zoom: Number(e.target.value) } })}
+        />
+      </div>
+
+      <div className="form-group">
+        <label>Marker Label</label>
+        <input
+          type="text"
+          value={mapData.markerLabel || ''}
+          onChange={(e) =>
+            setContent({
+              ...content,
+              mapData: { ...mapData, markerLabel: e.target.value },
+            })
+          }
+        />
+      </div>
+
+      <div className="form-group">
+        <label>Base Map Style</label>
+        <select
+          value={mapData.tileStyle || 'street'}
+          onChange={(e) => setContent({ ...content, mapData: { ...mapData, tileStyle: e.target.value as any } })}
+        >
+          <option value="street">Street</option>
+          <option value="terrain">Terrain</option>
+          <option value="satellite">Satellite</option>
+        </select>
+      </div>
+
+      <div className="form-group">
+        <label>Tile Source Mode</label>
+        <select
+          value={mapData.tileSourceMode || 'offline'}
+          onChange={(e) =>
+            setContent({
+              ...content,
+              mapData: { ...mapData, tileSourceMode: e.target.value as 'offline' | 'online' },
+            })
+          }
+        >
+          <option value="offline">Offline (Local tiles)</option>
+          <option value="online">Online (Internet tiles)</option>
+        </select>
+      </div>
+
+      {mapData.tileSourceMode !== 'online' && (
+        <>
+          <div className="form-group">
+            <label>Leaflet Asset Path</label>
+            <input
+              type="text"
+              value={mapData.leafletAssetPath || '/leaflet'}
+              onChange={(e) =>
+                setContent({ ...content, mapData: { ...mapData, leafletAssetPath: e.target.value } })
+              }
+              placeholder="/leaflet"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Offline Tile URL Template</label>
+            <input
+              type="text"
+              value={mapData.tileUrlTemplate || '/map-tiles/{z}/{x}/{y}.png'}
+              onChange={(e) =>
+                setContent({ ...content, mapData: { ...mapData, tileUrlTemplate: e.target.value } })
+              }
+              placeholder="/map-tiles/{z}/{x}/{y}.png"
+            />
+          </div>
+          <small className="form-hint">Use local/static assets for offline deployment.</small>
+        </>
+      )}
+
+      {[
+        { key: 'showLayerControl', label: 'Show Layer Control' },
+        { key: 'showZoomControl', label: 'Show Zoom Control' },
+        { key: 'showScale', label: 'Show Scale' },
+        { key: 'enableScrollZoom', label: 'Enable Scroll Zoom' },
+        { key: 'enableLiveLocation', label: 'Enable Real-Time Location Tracking' },
+      ].map((option) => (
+        <div className="form-group inline-checkbox" key={option.key}>
+          <label>
+            <input
+              type="checkbox"
+              checked={(mapData as any)[option.key] ?? false}
+              onChange={(e) =>
+                setContent({
+                  ...content,
+                  mapData: { ...mapData, [option.key]: e.target.checked },
+                })
+              }
+            />{' '}
+            {option.label}
+          </label>
+        </div>
+      ))}
+    </>
+  );
 
   const renderContentFields = () => {
     switch (activeBlockType) {
@@ -546,6 +697,9 @@ export const AddBlockModal: React.FC<AddBlockModalProps> = ({
         );
       // } Changes 2
 
+      case 'map':
+        return renderMapFields();
+
       case 'button':
         return (
           <>
@@ -618,6 +772,7 @@ export const AddBlockModal: React.FC<AddBlockModalProps> = ({
                 <option value="image">Image</option>
                 <option value="list">List</option>
                 <option value="table">Table</option>
+                <option value="map">Map</option>
                 <option value="button">Button</option>
               </select>
             </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Edit2, Copy, Trash2, Palette } from 'lucide-react';
+import { Edit2, Copy, Trash2, Palette, Lock, Unlock } from 'lucide-react';
 
 interface FloatingToolbarProps {
   position: { x: number; y: number };
@@ -7,6 +7,8 @@ interface FloatingToolbarProps {
   onDuplicate: () => void;
   onDelete: () => void;
   onStyle: () => void;
+  onToggleLock: () => void;
+  isLocked: boolean;
 }
 
 export const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
@@ -15,6 +17,8 @@ export const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
   onDuplicate,
   onDelete,
   onStyle,
+  onToggleLock,
+  isLocked,
 }) => {
   return (
     <div
@@ -30,6 +34,9 @@ export const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
       </button>
       <button onClick={onStyle} title="Style Controls">
         <Palette size={16} />
+      </button>
+      <button onClick={onToggleLock} title={isLocked ? 'Unlock drag/resize' : 'Lock drag/resize'}>
+        {isLocked ? <Unlock size={16} /> : <Lock size={16} />}
       </button>
       <button onClick={onDuplicate} title="Duplicate Block">
         <Copy size={16} />

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Type, Heading, Image, List, Table, MousePointerClick } from 'lucide-react';
+import { Type, Heading, Image, List, Table, MousePointerClick, Map } from 'lucide-react';
 
 interface BlockTypeSelectorProps {
   isOpen: boolean;
@@ -21,6 +21,7 @@ export const BlockTypeSelector: React.FC<BlockTypeSelectorProps> = ({
     { type: 'list', label: 'List', icon: List, description: 'Add a list' },
     { type: 'table', label: 'Table', icon: Table, description: 'Add a table' },
     { type: 'button', label: 'Button', icon: MousePointerClick, description: 'Add a button' },
+    { type: 'map', label: 'Map', icon: Map, description: 'Add an interactive map' },
   ];
 
   return (

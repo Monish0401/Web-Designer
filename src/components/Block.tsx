@@ -1,5 +1,6 @@
 import React from 'react';
 import { Block as BlockType } from '../types';
+import { LeafletMapBlock } from './LeafletMapBlock';
 
 interface BlockProps {
   block: BlockType;
@@ -102,6 +103,14 @@ export const Block: React.FC<BlockProps> = ({
             </tbody>
           </table>
         );
+
+      case 'map':
+        return (
+          <div style={{ width: '100%', minHeight: '240px' }}>
+            <LeafletMapBlock mapData={block.content.mapData} />
+          </div>
+        );
+
       case 'button':
         const buttonTemplate = block.content.buttonTemplate || 'primary';
         const handleButtonClick = () => {
@@ -141,6 +150,7 @@ export const Block: React.FC<BlockProps> = ({
     borderColor: isSelected ? '#2563eb' : (block.style?.borderColor || '#e5e7eb'),
     borderRadius: block.style?.borderRadius || '8px',
     padding: block.style?.padding || '16px',
+    cursor: block.locked ? 'default' : 'move',
   };
 
   return (
@@ -163,42 +173,44 @@ export const Block: React.FC<BlockProps> = ({
       >
         {renderContent()}
       </div>
-      
-      {isSelected && (
+
+      {isSelected && block.locked && <div className="block-lock-badge">Locked</div>}
+
+      {isSelected && !block.locked && (
         <>
           {/* Corner resize handles */}
-          <div 
-            className="resize-handle resize-handle-nw" 
+          <div
+            className="resize-handle resize-handle-nw"
             onMouseDown={(e) => handleResizeMouseDown(e, 'nw')}
           />
-          <div 
-            className="resize-handle resize-handle-ne" 
+          <div
+            className="resize-handle resize-handle-ne"
             onMouseDown={(e) => handleResizeMouseDown(e, 'ne')}
           />
-          <div 
-            className="resize-handle resize-handle-sw" 
+          <div
+            className="resize-handle resize-handle-sw"
             onMouseDown={(e) => handleResizeMouseDown(e, 'sw')}
           />
-          <div 
-            className="resize-handle resize-handle-se" 
+          <div
+            className="resize-handle resize-handle-se"
             onMouseDown={(e) => handleResizeMouseDown(e, 'se')}
           />
-          
+
           {/* Edge resize handles */}
-          <div 
-            className="resize-handle resize-handle-n" 
+          <div
+            className="resize-handle resize-handle-n"
             onMouseDown={(e) => handleResizeMouseDown(e, 'n')}
           />
-          <div 
-            className="resize-handle resize-handle-s" 
+          <div
+            className="resize-handle resize-handle-s"
             onMouseDown={(e) => handleResizeMouseDown(e, 's')}
           />
-          <div 
-            className="resize-handle resize-handle-w" 
+          <div
+            className="resize-handle resize-handle-w"
             onMouseDown={(e) => handleResizeMouseDown(e, 'w')}
           />
-          <div 
-            className="resize-handle resize-handle-e" 
+          <div
+            className="resize-handle resize-handle-e"
             onMouseDown={(e) => handleResizeMouseDown(e, 'e')}
           />
         </>

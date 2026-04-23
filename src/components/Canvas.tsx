@@ -82,6 +82,7 @@ export const Canvas: React.FC = () => {
             id: createBlockId(),
             x: blockToDuplicate.x + 20,
             y: blockToDuplicate.y + 20,
+            locked: false,
         };
         const newBlocks = [...blocks, newBlock];
         setBlocks(newBlocks);
@@ -127,6 +128,11 @@ export const Canvas: React.FC = () => {
         const block = blocks.find((b) => b.id === blockId);
         if (!block) return;
 
+        if (block.locked) {
+            setSelectedBlockId(blockId);
+            return;
+        }
+
         setDraggedBlockId(blockId);
         setSelectedBlockId(blockId);
         setDragOffset({
@@ -138,7 +144,7 @@ export const Canvas: React.FC = () => {
     const handleResizeStart = (e: React.MouseEvent, blockId: string, handle: string) => {
         e.stopPropagation();
         const block = blocks.find((b) => b.id === blockId);
-        if (!block) return;
+        if (!block || block.locked) return;
 
         setResizing({ blockId, handle });
         setResizeStart({
@@ -377,6 +383,23 @@ export const Canvas: React.FC = () => {
                 defaultContent.imageUrl = 'https://via.placeholder.com/300x200';
                 defaultContent.imageAlt = 'Placeholder image';
                 break;
+            case 'map':
+                defaultContent.mapData = {
+                    latitude: 20.5937,
+                    longitude: 78.9629,
+                    zoom: 5,
+                    markerLabel: 'Default map marker',
+                    tileStyle: 'street',
+                    showScale: true,
+                    showZoomControl: true,
+                    enableScrollZoom: true,
+                    enableLiveLocation: false,
+                    showLayerControl: true,
+                    tileSourceMode: 'offline',
+                    tileUrlTemplate: '/map-tiles/{z}/{x}/{y}.png',
+                    leafletAssetPath: '/leaflet',
+                };
+                break;
         }
 
         const newBlock: BlockType = {
@@ -399,6 +422,18 @@ export const Canvas: React.FC = () => {
         setEditingBlock(newBlock);
         setIsModalOpen(true);
         toast.success('Block created - customize details');
+    };
+
+    const handleToggleLock = () => {
+        if (!selectedBlockId) return;
+
+        const newBlocks = blocks.map((b) =>
+            b.id === selectedBlockId ? { ...b, locked: !b.locked } : b
+        );
+
+        setBlocks(newBlocks);
+        saveToHistory(newBlocks);
+        toast.success('Block lock updated');
     };
 
     const handleStyleChange = (style: any) => {
@@ -479,6 +514,8 @@ export const Canvas: React.FC = () => {
                         onStyle={(e?:React.MouseEvent) => {e?.stopPropagation();setIsStylePanelOpen(true);}}
                         onDuplicate={handleDuplicateBlock}
                         onDelete={handleDeleteBlock}
+                        onToggleLock={handleToggleLock}
+                        isLocked={!!selectedBlock.locked}
                     />
                 )}
 
